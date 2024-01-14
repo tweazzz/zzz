@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kruzhok API Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Kruzhok API Test</h1>
+
+    <div>
+        <label for="token">Token:</label>
+        <input type="text" id="token" placeholder="Enter your token">
+    </div>
+
+    <div>
+        <label for="kruzhok_name">Kruzhok Name:</label>
+        <input type="text" id="kruzhok_name" placeholder="Enter kruzhok name">
+    </div>
+
+    <div>
+        <label for="teacher_id">Teacher:</label>
+        <select id="teacher_id"></select>
+    </div>
+
+    <div>
+        <label for="purpose">Purpose:</label>
+        <input type="text" id="purpose" placeholder="Enter purpose">
+    </div>
+
+    <div>
+        <label for="week_day">Week Day:</label>
+        <input type="text" id="week_day" placeholder="Enter week day">
+    </div>
+
+    <div>
+        <label for="start_end_time">Start-End Time:</label>
+        <input type="text" id="start_end_time" placeholder="Enter start-end time">
+    </div>
+
+    <button id="submitBtn">Submit</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загрузка списка учителей при загрузке страницы
+            axios.get('http://127.0.0.1:8000/api/kruzhok/available_teachers/')
+                .then(function(response) {
+                    const teacherDropdown = document.getElementById('teacher_id');
+                    response.data.forEach(function(teacher) {
+                        const option = document.createElement('option');
+                        option.value = teacher.id;
+                        option.text = teacher.full_name;
+                        teacherDropdown.add(option);
+                    });
+                })
+                .catch(function(error) {
+                    console.error('Error fetching teachers:', error);
+                });
+
+            document.getElementById('submitBtn').addEventListener('click', function() {
+                const token = document.getElementById('token').value;
+                const kruzhokName = document.getElementById('kruzhok_name').value;
+                const teacherId = document.getElementById('teacher_id').value;
+                const purpose = document.getElementById('purpose').value;
+                const weekDay = document.getElementById('week_day').value;
+                const startEndTime = document.getElementById('start_end_time').value;
+
+                const requestData = {
+                    'kruzhok_name': kruzhokName,
+                    'teacher_id': teacherId,
+                    'photo': null,
+                    'purpose': purpose,
+                    'lessons': [
+                        {
+                            'week_day': weekDay,
+                            'start_end_time': startEndTime
+                        }
+                    ]
+                };
+
+                axios.post('http://127.0.0.1:8000/api/kruzhok/', requestData, {
+                    headers: {
+                        'Authorization': 'Token ' + token,
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(function(response) {
+                    console.log('Success:', response.data);
+                })
+                .catch(function(error) {
+                    console.error('Error:', error.response.data);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

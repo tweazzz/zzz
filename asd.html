@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sport Success Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>Sport Success Form</h2>
+    <form id="sportSuccessForm">
+        <div class="form-group">
+            <label for="fullname">Full Name:</label>
+            <input type="text" class="form-control" id="fullname" name="fullname" required>
+        </div>
+
+        <div class="form-group">
+            <label for="photo">Photo:</label>
+            <input type="file" class="form-control-file" id="photo" name="photo">
+        </div>
+
+        <div class="form-group">
+            <label for="student_success">Student Success:</label>
+            <input type="text" class="form-control" id="student_success" name="student_success" required>
+        </div>
+
+        <div class="form-group">
+            <label for="class_id">Class:</label>
+            <select class="form-control" id="class_id" name="class_id" required>
+            </select>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="submitForm()">Submit</button>
+    </form>
+
+    <div id="result" class="mt-3"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadAvailableClasses();
+    });
+
+    function loadAvailableClasses() {
+        axios.get('https://bilimge.kz/api/prideofschool/available_classes/', {
+            headers: {
+                'Authorization': 'Token 13031de9fcd327ec4090e001eb3b7bffb7d3cff9'
+            }
+        })
+        .then(function (response) {
+            var classSelect = document.getElementById('class_id');
+            classSelect.innerHTML = '';
+
+            response.data.forEach(function (classItem) {
+                var option = document.createElement('option');
+                option.value = classItem.id;
+                option.text = classItem.class_name;
+                classSelect.add(option);
+            });
+        })
+        .catch(function (error) {
+            console.error('Failed to load available classes');
+        });
+    }
+
+    function submitForm() {
+        var form = document.getElementById('sportSuccessForm');
+        var formData = new FormData(form);
+
+        axios.post('https://bilimge.kz/api/Sport_SuccessApi/', formData, {
+            headers: {
+                'Authorization': 'Token 4bbb49e8c3566ac5a8a9bb1aa921d96655af3a4a',
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+        .then(function (response) {
+            document.getElementById('result').innerHTML = '<div class="alert alert-success" role="alert">Success! Data sent to the server.</div>';
+        })
+        .catch(function (error) {
+            document.getElementById('result').innerHTML = '<div class="alert alert-danger" role="alert">Error! Failed to send data.</div>';
+        });
+    }
+</script>
+
+</body>
+</html>
