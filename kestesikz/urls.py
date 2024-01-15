@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include,re_path
-from djoser.views import UserViewSet
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),

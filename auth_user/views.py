@@ -12,13 +12,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CustomUserCreateSerializer, CustomTokenCreateSerializer
 from djoser.views import UserViewSet, TokenCreateView
+from .serializers import CustomUserSerializer 
 
 
 
-class UserListView(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
+class CustomUserViewSet(UserViewSet):
+    serializer_class = CustomUserSerializer
+    http_method_names = ['get','head','options']
 
 class AdminUserCreateView(generics.CreateAPIView):
     serializer_class = CustomUserCreateSerializer

@@ -29,6 +29,7 @@ class ClassroomApi(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ClassroomFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -45,6 +46,7 @@ class ClassApi(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ClassFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -61,6 +63,7 @@ class ScheduleApi(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ScheduleFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -106,6 +109,7 @@ class MenuApi(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = MenuFilter
+    http_method_names = ['get','head','options']
 
 
     def perform_create(self, serializer):
@@ -124,6 +128,7 @@ class SliderApi(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = SliderFilter
+    http_method_names = ['get','head','options']
 
 
     def perform_create(self, serializer):
@@ -142,6 +147,7 @@ class SubjectApi(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = SubjectFilter
+    http_method_names = ['get','head','options']
 
 
     def perform_create(self, serializer):
@@ -162,6 +168,7 @@ class schoolPasportApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = School_PasportFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -179,6 +186,7 @@ class School_AdministrationApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = School_AdministrationFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -196,6 +204,7 @@ class Sport_SuccessApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = Sport_SuccessFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -227,6 +236,7 @@ class Oner_SuccessApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = Oner_SuccessFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -257,6 +267,7 @@ class PandikOlimpiadaApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = PandikOlimpiada_SuccessFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -287,6 +298,7 @@ class School_RedCertificateApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RedCertificateFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -304,6 +316,7 @@ class School_AltynBelgiApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = AltynBelgiFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -320,6 +333,7 @@ class School_SocialMediaApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = School_SocialMediaFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -337,6 +351,7 @@ class School_DirectorApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = School_DirectorFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -354,6 +369,7 @@ class Extra_LessonsApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = Extra_LessonsFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -384,6 +400,7 @@ class RingApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RingFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -403,6 +420,7 @@ class TeacherApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = TeacherFilter
+    http_method_names = ['get','head','options']
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve','upload_photo']:
@@ -426,6 +444,7 @@ class TeacherWorkloadApi(viewsets.ModelViewSet):
     queryset = TeacherWorkload.objects.all()
     serializer_class = TeacherWorkloadSerializer
     permission_classes = [IsAdminSchool]
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         serializer.save(school=self.request.user.school)
@@ -442,6 +461,7 @@ class KruzhokListApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = KruzhokFilter
+    http_method_names = ['get','head','options']
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve','upload_photo']:
@@ -480,6 +500,7 @@ class DopUrokApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DopUrokFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -497,6 +518,7 @@ class DopUrokRingApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DopUrokRingFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -513,6 +535,7 @@ class NewsApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = NewsFilter
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -527,6 +550,7 @@ class NotificationsApi(viewsets.ModelViewSet):
     queryset = Notifications.objects.all()
     serializer_class = NotificationsSerializer
     permission_classes = [IsAdminSchool]
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -541,6 +565,7 @@ class SchoolMapApi(viewsets.ModelViewSet):
     queryset = SchoolMap.objects.all()
     serializer_class = SchoolMapSerializer
     permission_classes = [IsAdminSchool]
+    http_method_names = ['get','head','options']
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:

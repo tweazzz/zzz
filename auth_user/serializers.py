@@ -13,16 +13,30 @@ from djoser.serializers import TokenCreateSerializer as DjoserTokenCreateSeriali
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
-from django.utils.translation import gettext as _
-from django.contrib.auth import authenticate
+from djoser.serializers import UserSerializer
+from .models import School
 
 
+class CustomUserSerializer(UserSerializer):
+    fio = serializers.CharField(required=False)
+    school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'username', 'school', 'date_joined', 'is_active', 'is_staff')
+    class Meta(UserSerializer.Meta):
+        fields = ('id', 'email', 'username', 'fio', 'school', 'role')
+        extra_kwargs = {
+            'fio': {'read_only': True},
+            'school': {'read_only': True},
+            'role': {'read_only': True},
+        }
 
+    def update(self, instance, validated_data):
+        instance.fio = validated_data.get('fio', instance.fio)
+        instance.school = validated_data.get('school', instance.school)
+        instance.role = validated_data.get('role', instance.role)
+
+        instance.save()
+        return instance
 
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
     role = serializers.CharField(write_only=True)
@@ -68,7 +82,6 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             if self.user and not self.user.check_password(password):
                 self.fail("invalid_credentials")
         if self.user and self.user.is_active:
-            # Кастомная проверка роли пользователя в зависимости от пути запроса
             request_path = self.context.get("request").path
             if 'client' in request_path and self.user.role != 'client':
                 raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})

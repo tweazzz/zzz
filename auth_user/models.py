@@ -9,7 +9,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
     username = models.CharField(_('username'), max_length=30, unique=True)
     password = models.CharField(_('password'), max_length=128)
-
+    fio = models.CharField('FIO', max_length=255, null=True, blank=True)
     school = models.OneToOneField(School, on_delete=models.CASCADE, null=True, blank=True, related_name='admin_user')
     date_joined = models.DateTimeField(default=timezone.now, null=True)
     is_active = models.BooleanField(default=True)

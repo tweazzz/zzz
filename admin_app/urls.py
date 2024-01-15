@@ -3,14 +3,13 @@ from admin_app.views import *
 from rest_framework import routers
 from django.conf import settings
 from django.conf.urls.static import static
-from auth_user.views import UserListView
 from djoser.views import TokenCreateView
-from auth_user.views import AdminUserCreateView,CustomTokenCreateView
+from auth_user.views import AdminUserCreateView,CustomTokenCreateView,CustomUserViewSet
 
 
 router = routers.DefaultRouter()
 # router.register(r'api/admin', AdminsApi)
-router.register(r'api/users', UserListView, basename='user')
+router.register(r'api/users', CustomUserViewSet, basename='user')
 router.register(r'api/school', SchoolsApi)
 router.register(r'api/classroom', ClassroomApi)
 router.register(r'api/teacher', TeacherApi)
