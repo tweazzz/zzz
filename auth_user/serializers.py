@@ -17,12 +17,13 @@ from djoser.serializers import UserSerializer
 from .models import School
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     fio = serializers.CharField(required=False)
     school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
 
-    class Meta(UserSerializer.Meta):
+    class Meta:
+        model = User
         fields = ('id', 'email', 'username', 'fio', 'school', 'role')
         extra_kwargs = {
             'fio': {'read_only': True},
@@ -33,21 +34,30 @@ class CustomUserSerializer(UserSerializer):
     def update(self, instance, validated_data):
         instance.fio = validated_data.get('fio', instance.fio)
         instance.school = validated_data.get('school', instance.school)
-        instance.role = validated_data.get('role', instance.role)
-
+        instance.email = validated_data.get('email', instance.email)
+        instance.username = validated_data.get('username', instance.username)
         instance.save()
-        return instance
 
+        return instance
+    
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
     role = serializers.CharField(write_only=True)
+    fio = serializers.CharField(required=False)
 
     class Meta(DjoserUserCreateSerializer.Meta):
-        fields = DjoserUserCreateSerializer.Meta.fields + ('role',)  
+        fields = DjoserUserCreateSerializer.Meta.fields + ('role', 'fio',)
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         role = validated_data.get('role')
         return validated_data
+
+    def create(self, validated_data):
+        user = super().create(validated_data)
+        user.fio = validated_data.get('fio', '')
+        user.role = validated_data.get('role', '')
+        user.save()
+        return user
 
 
 

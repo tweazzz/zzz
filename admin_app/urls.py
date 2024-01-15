@@ -1,43 +1,43 @@
 from django.urls import path, include,re_path
 from admin_app.views import *
-from rest_framework import routers
+from rest_framework.routers import DefaultRouter
 from django.conf import settings
 from django.conf.urls.static import static
 from djoser.views import TokenCreateView
 from auth_user.views import AdminUserCreateView,CustomTokenCreateView,CustomUserViewSet
 
 
-router = routers.DefaultRouter()
+admin_router = DefaultRouter()
 # router.register(r'api/admin', AdminsApi)
-router.register(r'api/users', CustomUserViewSet, basename='user')
-router.register(r'api/school', SchoolsApi)
-router.register(r'api/classroom', ClassroomApi)
-router.register(r'api/teacher', TeacherApi)
-router.register(r'api/class', ClassApi)
-router.register(r'api/schedule', ScheduleApi)
-router.register(r'api/menu', MenuApi)
-router.register(r'api/slider', SliderApi)
-router.register(r'api/subject', SubjectApi)
-router.register(r'api/schoolpasport', schoolPasportApi)
-router.register(r'api/school_administration', School_AdministrationApi)
-router.register(r'api/school_director', School_DirectorApi)
-router.register(r'api/extra_lesson', Extra_LessonsApi)
-router.register(r'api/kruzhok', KruzhokListApi)
-router.register(r'api/Sport_SuccessApi', Sport_SuccessApi)
-router.register(r'api/Oner_SuccessApi', Oner_SuccessApi)
-router.register(r'api/PandikOlimpiadaApi', PandikOlimpiadaApi)
-router.register(r'api/School_RedCertificateApi', School_RedCertificateApi)
-router.register(r'api/School_AltynBelgiApi', School_AltynBelgiApi)
-router.register(r'api/School_SocialMediaApi', School_SocialMediaApi)
-router.register(r'api/ringApi', RingApi)
-router.register(r'api/DopUrokApi', DopUrokApi)
-router.register(r'api/DopUrokRingApi', DopUrokRingApi)
-router.register(r'api/newsApi', NewsApi)
-router.register(r'api/notification', NotificationsApi)
-router.register(r'api/schoolmap', SchoolMapApi)
+admin_router.register(r'api/users', CustomUserViewSet, basename='admin')
+admin_router.register(r'api/school', SchoolsApi)
+admin_router.register(r'api/classroom', ClassroomApi)
+admin_router.register(r'api/teacher', TeacherApi)
+admin_router.register(r'api/class', ClassApi)
+admin_router.register(r'api/schedule', ScheduleApi)
+admin_router.register(r'api/menu', MenuApi)
+admin_router.register(r'api/slider', SliderApi)
+admin_router.register(r'api/subject', SubjectApi)
+admin_router.register(r'api/schoolpasport', schoolPasportApi)
+admin_router.register(r'api/school_administration', School_AdministrationApi)
+admin_router.register(r'api/school_director', School_DirectorApi)
+admin_router.register(r'api/extra_lesson', Extra_LessonsApi)
+admin_router.register(r'api/kruzhok', KruzhokListApi)
+admin_router.register(r'api/Sport_SuccessApi', Sport_SuccessApi)
+admin_router.register(r'api/Oner_SuccessApi', Oner_SuccessApi)
+admin_router.register(r'api/PandikOlimpiadaApi', PandikOlimpiadaApi)
+admin_router.register(r'api/School_RedCertificateApi', School_RedCertificateApi)
+admin_router.register(r'api/School_AltynBelgiApi', School_AltynBelgiApi)
+admin_router.register(r'api/School_SocialMediaApi', School_SocialMediaApi)
+admin_router.register(r'api/ringApi', RingApi)
+admin_router.register(r'api/DopUrokApi', DopUrokApi)
+admin_router.register(r'api/DopUrokRingApi', DopUrokRingApi)
+admin_router.register(r'api/newsApi', NewsApi)
+admin_router.register(r'api/notification', NotificationsApi)
+admin_router.register(r'api/schoolmap', SchoolMapApi)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', include(admin_router.urls)),
     path('login/', CustomTokenCreateView.as_view(), name='admin_token_create'),
     path('register/', AdminUserCreateView.as_view(), name='admin_create'),
     path('api/available_school/', SchoolsApi.as_view({'get': 'available_school'}), name='available-school'),

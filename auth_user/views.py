@@ -18,7 +18,7 @@ from .serializers import CustomUserSerializer
 
 class CustomUserViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
-    http_method_names = ['get','head','options']
+    http_method_names = ['get','head','options','put','patch']
 
 class AdminUserCreateView(generics.CreateAPIView):
     serializer_class = CustomUserCreateSerializer
