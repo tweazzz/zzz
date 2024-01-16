@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from auth_user.models import User
 from django.utils.translation import gettext_lazy as _
 from djoser.serializers import TokenCreateSerializer
 from rest_framework import serializers
@@ -90,7 +90,8 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
         if not self.user:
             self.user = User.objects.filter(**params).first()
             if self.user and not self.user.check_password(password):
-                self.fail("invalid_credentials")
+                self.fail("invalid_credentials", detail=_("Invalid login or password"))
+
         if self.user and self.user.is_active:
             request_path = self.context.get("request").path
             if 'client' in request_path and self.user.role != 'client':
@@ -98,7 +99,8 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             elif 'admin' in request_path and self.user.role != 'admin':
                 raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})
             return attrs
-        self.fail("invalid_credentials")
+
+        self.fail("invalid_credentials", detail=_("Invalid login or password"))
 
     def to_representation(self, instance):
         return TokenSerializer(instance).data

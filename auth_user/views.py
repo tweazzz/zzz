@@ -13,11 +13,13 @@ from rest_framework import status
 from .serializers import CustomUserCreateSerializer, CustomTokenCreateSerializer
 from djoser.views import UserViewSet, TokenCreateView
 from .serializers import CustomUserSerializer 
+from django.contrib.auth import get_user_model
 
 
-
+User = get_user_model()
 class CustomUserViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
+    queryset = User.objects.all()
     http_method_names = ['get','head','options','put','patch']
 
 class AdminUserCreateView(generics.CreateAPIView):

@@ -10,7 +10,32 @@ class School(models.Model):
     school_ru_name = models.CharField('school_full_name', max_length=255, null=True)
     school_eng_name = models.CharField('school_full_name', max_length=255, null=True)
     url = models.CharField('url', max_length=255)
-    city = models.CharField('city', max_length=255)
+    REGION_CHOICES = [
+        ('abay', 'Абайская область'),
+        ('akmolinsk', 'Акмолинская область'),
+        ('aktobe', 'Актюбинская область'),
+        ('almaty_region', 'Алматинская область'),
+        ('atyrau', 'Атырауская область'),
+        ('east_kazakhstan', 'Восточно-Казахстанская область'),
+        ('zhambyl', 'Жамбылская область'),
+        ('zhetysu', 'Жетысуская область'),
+        ('west_kazakhstan', 'Западно-Казахстанская область'),
+        ('karaganda', 'Карагандинская область'),
+        ('kostanay', 'Костанайская область'),
+        ('kyzylorda', 'Кызылординская область'),
+        ('mangystau', 'Мангистауская область'),
+        ('pavlodar', 'Павлодарская область'),
+        ('north_kazakhstan', 'Северо-Казахстанская область'),
+        ('turkestan', 'Туркестанская область'),
+        ('ulytau', 'Улытауская область'),
+    ]
+    region = models.CharField('region', max_length=255, choices=REGION_CHOICES, null=True)
+    CITY_CHOICES = [
+        ('almaty', 'Алматы'),
+        ('astana', 'Астана'),
+        ('shymkent', 'Шымкент'),
+    ]
+    city = models.CharField('city', max_length=255, choices=CITY_CHOICES, default='almaty', null=True)
     logo = models.ImageField(blank=True, null=True)
     GMT_5 = 'GMT+5'
     GMT_6 = 'GMT+6'
