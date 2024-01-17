@@ -4,6 +4,10 @@ from colorfield.fields import ColorField
 import datetime
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+import qrcode
+from PIL import Image
+from django.core.files.base import ContentFile
+from io import BytesIO
 
 class School(models.Model):
     school_kz_name = models.CharField('school_full_name', max_length=255)
@@ -310,11 +314,42 @@ class News(models.Model):
         default=MANUAL,
     )
     photos = models.ManyToManyField('PhotoforNews', related_name='news_photos', blank=True)
+    qr_code = models.ImageField(blank=True, null=True)
+
     class Meta:
         verbose_name_plural = 'News'
 
     def __str__(self):
-        return f'{self.date}  {self.school} news'
+        return f'{self.date} {self.type} {self.school} news'
+
+    def save(self, *args, **kwargs):
+        if self.type == 'facebook':
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(self.text)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer)
+            filename = f'qr_code_{self.id}.png'
+
+            # Убедимся, что qr_code не равен None перед сохранением
+            if self.qr_code:
+                self.qr_code.delete()
+
+            self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+
+        # Если тип новости был изменен с 'facebook', удаляем QR-код
+        elif self.pk and News.objects.get(pk=self.pk).type == 'facebook':
+            if self.qr_code:
+                self.qr_code.delete()
+
+        super().save(*args, **kwargs)
 
 class PhotoforNews(models.Model):
     image = models.ImageField()

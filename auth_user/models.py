@@ -4,13 +4,16 @@ from django.utils import timezone
 from admin_app.models import School
 from .managers import CustomUserManager
 from django.utils.translation import gettext_lazy as _
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.core.exceptions import ValidationError
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
     username = models.CharField(_('username'), max_length=30, unique=True)
     password = models.CharField(_('password'), max_length=128)
     fio = models.CharField('FIO', max_length=255, null=True, blank=True)
-    school = models.OneToOneField(School, on_delete=models.CASCADE, null=True, blank=True, related_name='admin_user')
+    school = models.ForeignKey(School, on_delete=models.CASCADE, null=True, blank=True, related_name='admin_user')
     date_joined = models.DateTimeField(default=timezone.now, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
@@ -39,3 +42,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.email}'
+
+@receiver(pre_save, sender=User)
+def check_school_uniqueness(sender, instance, **kwargs):
+    if instance.role == 'admin':
+        if User.objects.filter(school=instance.school, role='admin').exclude(id=instance.id).exists():
+            raise ValidationError({"school": "This school already has an administrator."})

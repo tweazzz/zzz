@@ -1,5 +1,6 @@
 from django_filters import rest_framework as filters
 from admin_app.models import *
+from django.db import models
 
 # class AdminFilter(filters.FilterSet):
 #     class Meta:
@@ -11,7 +12,7 @@ class NewsFilter(filters.FilterSet):
     class Meta:
         model = News
         fields = '__all__'
-        exclude = ['photos']
+        exclude = ['photos','qr_code']
 
 class SchoolFilter(filters.FilterSet):
     class Meta:
@@ -67,11 +68,6 @@ class MenuFilter(filters.FilterSet):
         model = Menu
         fields = '__all__'
 
-class NewsFilter(filters.FilterSet):
-    class Meta:
-        model = News
-        fields = '__all__'
-        exclude = ['image']
 
 class PandikOlimpiada_SuccessFilter(filters.FilterSet):
     class Meta:

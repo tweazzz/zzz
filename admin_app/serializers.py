@@ -691,8 +691,8 @@ class NewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = News
-        fields = ['id', 'date', 'text', 'type', 'photos', 'school']
-        read_only_fields = ['school']
+        fields = ['id', 'date', 'text', 'type', 'photos', 'qr_code', 'school']
+        read_only_fields = ['school','qr_code']
 
     def create(self, validated_data):
         photos_data = validated_data.pop('photos', [])
@@ -711,11 +711,21 @@ class NewsSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['photos'] = self.get_absolute_photo_urls(instance.photos.all())
+
+        if instance.qr_code:
+            representation['qr_code'] = self.get_absolute_url(instance.qr_code.url)
+        else:
+            del representation['qr_code']  # Если qr_code None, удаляем его из представления
+
         return representation
 
     def get_absolute_photo_urls(self, photos_queryset):
         request = self.context['request']
         return [request.build_absolute_uri(photo.image.url) if photo.image else None for photo in photos_queryset]
+
+    def get_absolute_url(self, url):
+        request = self.context['request']
+        return request.build_absolute_uri(url)
 
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
