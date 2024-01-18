@@ -314,7 +314,7 @@ class News(models.Model):
         default=MANUAL,
     )
     photos = models.ManyToManyField('PhotoforNews', related_name='news_photos', blank=True)
-    qr_code = models.ImageField(blank=True, null=True)
+    qr_code = models.ImageField(blank=True, null=True, upload_to='news_qrcodes/')
 
     class Meta:
         verbose_name_plural = 'News'
@@ -338,18 +338,22 @@ class News(models.Model):
             img.save(buffer)
             filename = f'qr_code_{self.id}.png'
 
-            # Убедимся, что qr_code не равен None перед сохранением
+            # Удаляем старый QR-код перед сохранением нового
             if self.qr_code:
                 self.qr_code.delete()
 
             self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
 
-        # Если тип новости был изменен с 'facebook', удаляем QR-код
-        elif self.pk and News.objects.get(pk=self.pk).type == 'facebook':
-            if self.qr_code:
-                self.qr_code.delete()
-
         super().save(*args, **kwargs)
+
+# Сигнал для удаления QR-кода при удалении новости
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+@receiver(pre_delete, sender=News)
+def delete_qr_code(sender, instance, **kwargs):
+    # Удаляем QR-код при удалении новости
+    if instance.qr_code:
+        instance.qr_code.delete(False)  # Удаляем файл из хранилища
 
 class PhotoforNews(models.Model):
     image = models.ImageField()
@@ -463,7 +467,7 @@ class School_SocialMedia(models.Model):
             img = qr.make_image(fill_color="black", back_color="white")
             buffer = BytesIO()
             img.save(buffer)
-            filename = f'qr_code_{self.id}.png'
+            filename = f'qr_code.png'
 
             self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
 
