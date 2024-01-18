@@ -1,4 +1,3 @@
-from rest_framework import serializers
 from auth_user.models import User
 from django.utils.translation import gettext_lazy as _
 from djoser.serializers import TokenCreateSerializer
@@ -6,16 +5,10 @@ from rest_framework import serializers
 from djoser.serializers import TokenSerializer
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
-from djoser.serializers import TokenCreateSerializer as DjoserTokenCreateSerializer
-from rest_framework import serializers
-from django.contrib.auth.password_validation import validate_password
-from django.core import exceptions as django_exceptions
-from djoser.serializers import UserSerializer
-from .models import School
-
+from admin_app.models import School
+from .models import PasswordResetToken
 
 class CustomUserSerializer(serializers.ModelSerializer):
     fio = serializers.CharField(required=False)
@@ -104,3 +97,12 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
 
     def to_representation(self, instance):
         return TokenSerializer(instance).data
+    
+
+# class PasswordResetTokenSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = PasswordResetToken
+#         fields = ['email','code', 'is_active']
+    
+class PasswordResetVerifySerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=4, required=True)

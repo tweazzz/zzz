@@ -48,3 +48,15 @@ def check_school_uniqueness(sender, instance, **kwargs):
     if instance.role == 'admin':
         if User.objects.filter(school=instance.school, role='admin').exclude(id=instance.id).exists():
             raise ValidationError({"school": "This school already has an administrator."})
+
+
+
+class PasswordResetToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    email = models.EmailField(blank=True)
+    code = models.CharField(max_length=4)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'Reset Token for {self.user.username}'
