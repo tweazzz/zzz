@@ -226,7 +226,7 @@ class AltynBelgiSerializer(serializers.ModelSerializer):
 class School_SocialMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = School_SocialMedia
-        fields = ['id','type','account_name','school']
+        fields = ['id','type','account_name','qr_code','school']
         read_only_fields = ['school']
 
 class School_DirectorSerializer(serializers.ModelSerializer):

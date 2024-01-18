@@ -441,11 +441,33 @@ class School_SocialMedia(models.Model):
         default=youtube,
     )
     account_name = models.CharField(max_length=250)
+    qr_code = models.ImageField(blank=True, null=True, upload_to='social_media_qrcodes/')
+
     class Meta:
         verbose_name_plural = "School Social Media"
 
     def __str__(self):
         return f'{self.school} Social Media {self.type}'
+    
+    def save(self, *args, **kwargs):
+        if not self.qr_code:
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(f"{self.type}: {self.account_name}")
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer)
+            filename = f'qr_code_{self.id}.png'
+
+            self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+
+        super().save(*args, **kwargs)
 
 
 class School_Administration(models.Model):

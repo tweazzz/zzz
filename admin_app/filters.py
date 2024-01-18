@@ -131,6 +131,8 @@ class School_SocialMediaFilter(filters.FilterSet):
     class Meta:
         model = School_SocialMedia
         fields = '__all__'
+        exclude = ['qr_code']
+
 
 class SliderFilter(filters.FilterSet):
     class Meta:

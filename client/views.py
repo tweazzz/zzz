@@ -5,7 +5,7 @@ from django.views.generic.base import View
 from rest_framework import viewsets
 from django.views.generic import ListView, DetailView
 from admin_app.models import *
-from .serializers import *
+from admin_app.serializers import *
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from admin_app.permissions import IsAdminSchool,IsSuperAdminOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
