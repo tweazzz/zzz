@@ -10,6 +10,6 @@ def send_reset_code_email(email, code):
     """Отправка электронного письма с кодом сброса пароля."""
     subject = 'Code for reset password'
     message = f'Your code: {code}'
-    from_email = 'your@example.com'
+    from_email = 'akimzhankonarbayev@yandex.ru'
     recipient_list = [email]
     send_mail(subject, message, from_email, recipient_list)
