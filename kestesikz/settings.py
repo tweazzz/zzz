@@ -172,5 +172,5 @@ EMAIL_PORT = 587  # Порт SMTP-сервера Яндекса
 EMAIL_USE_TLS = True  # Использовать TLS для безопасного подключения
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'akimzhankonarbayev@yandex.ru'  # Ваша учетная запись на Яндексе
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_PASSWORD = 'qfvweuxgqayzptfz'
 

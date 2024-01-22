@@ -77,13 +77,18 @@ def send_reset_code(request):
         # Поиск существующего токена или создание нового
         reset_token, created = PasswordResetToken.objects.get_or_create(user=user)
 
+        error_response = Response(
+            {'error': 'The code has already been sent to your email'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
         # Если токен уже активен, возвращаем ошибку
-        if reset_token.is_active and reset_token.created_at < timezone.now() - timezone.timedelta(minutes=5):
+        if reset_token.is_active and timezone.now() - reset_token.created_at > timezone.timedelta(minutes=2):
             reset_token.is_active = False
             reset_token.save()
-
-        if reset_token.is_active:
-            return Response({'error': 'The code has already been sent to your email'}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response
+        elif reset_token.is_active:
+            return error_response
 
         # Генерация нового кода
         new_code = generate_random_code()
@@ -92,6 +97,7 @@ def send_reset_code(request):
         reset_token.code = new_code
         reset_token.email = email
         reset_token.is_active = True
+        reset_token.created_at = timezone.now()
         reset_token.save()
 
         # Отправка кода на почту пользователя
@@ -110,37 +116,50 @@ def verify_reset_code(request):
     serializer = PasswordResetVerifySerializer(data=request.data)
 
     if serializer.is_valid():
-        # Получаем код из сериализатора
+        # Получаем код и email из сериализатора
         code = serializer.validated_data['code']
+        email = serializer.validated_data['email']
 
         # Поиск токена сброса пароля
-        reset_token = get_object_or_404(PasswordResetToken, code=code, is_active=True)
+        reset_token = get_object_or_404(PasswordResetToken, code=code, user__email=email, is_active=True)
 
-        # Получаем пользователя, связанного с токеном
-        user = reset_token.user
-
-        # Получаем новый пароль и его подтверждение из запроса
-        new_password = request.data.get('new_password')
-        confirm_password = request.data.get('confirm_password')
-
-        # Проверка на совпадение нового и подтвержденного паролей
-        if new_password != confirm_password:
-            return Response({'error': 'Пароли не совпадают'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # Проверка на сложность пароля
-            validate_password(new_password, user)
-        except ValidationError as e:
-            return Response({'error': e.messages}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Установка нового пароля для пользователя
-        user.set_password(new_password)
-        user.save()
-
-        # Деактивация токена
-        reset_token.is_active = False
-        reset_token.save()
-
-        return Response({'message': 'Пароль успешно сброшен'}, status=status.HTTP_200_OK)
+        # Возвращаем информацию для проверки кода и емейла
+        return Response({'message': 'Код подтвержден', 'email': email}, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def reset_password(request):
+    # Получаем email и код из запроса
+    email = request.data.get('email')
+    code = request.data.get('code')
+
+    # Поиск токена сброса пароля
+    reset_token = get_object_or_404(PasswordResetToken, code=code, email=email, is_active=True)
+
+    # Получаем пользователя, связанного с токеном
+    user = reset_token.user
+
+    # Получаем новый пароль и его подтверждение из запроса
+    new_password = request.data.get('new_password')
+    confirm_password = request.data.get('confirm_password')
+
+    # Проверка на совпадение нового и подтвержденного паролей
+    if new_password != confirm_password:
+        return Response({'error': 'Пароли не совпадают'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Проверка на сложность пароля
+        validate_password(new_password, user)
+    except ValidationError as e:
+        return Response({'error': e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Установка нового пароля для пользователя
+    user.set_password(new_password)
+    user.save()
+
+    # Деактивация токена
+    reset_token.is_active = False
+    reset_token.save()
+
+    return Response({'message': 'Пароль успешно сброшен'}, status=status.HTTP_200_OK)
