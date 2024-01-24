@@ -1,0 +1,30 @@
+[
+    {
+        "id": 3,
+        "type": "instagram",
+        "account_name": "damelya_sw_",
+        "qr_code": "https://www.bilimge.kz/media/social_media_qrcodes/qr_code_4RvgSv9.png",
+        "school": 2
+    },
+    {
+        "id": 5,
+        "type": "instagram",
+        "account_name": "thinkingmindspage",
+        "qr_code": "https://www.bilimge.kz/media/social_media_qrcodes/qr_code_9WbUUGT.png",
+        "school": 1
+    },
+    {
+        "id": 6,
+        "type": "instagram",
+        "account_name": "jjulikim",
+        "qr_code": "https://www.bilimge.kz/media/social_media_qrcodes/qr_code_R3nj0dT.png",
+        "school": 2
+    },
+    {
+        "id": 4,
+        "type": "instagram",
+        "account_name": "hobbitzce",
+        "qr_code": "https://www.bilimge.kz/media/social_media_qrcodes/qr_code.png",
+        "school": 1
+    }
+]
