@@ -594,70 +594,35 @@ class SchoolMapApi(viewsets.ModelViewSet):
 
 import pickle
 from django.http import JsonResponse
-from django.views import View
+from rest_framework.generics import GenericAPIView
 import os
 
-class GetPostsDataView(View):
+class GetPostsDataView(GenericAPIView):
     def get(self, request, *args, **kwargs):
-        pickle_directory = 'main'
-
-        all_accounts_data = []
-
         try:
-            for filename in os.listdir(pickle_directory):
-                if filename.endswith('_data.pickle'):
-                    pickle_file_path = os.path.join(pickle_directory, filename)
+            pickle_file_path = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser/instagram_data.pickle'
 
-                    with open(pickle_file_path, 'rb') as pickle_in:
-                        account_data = pickle.load(pickle_in)
+            with open(pickle_file_path, 'rb') as pickle_file:
+                data = pickle.load(pickle_file)
 
-                    all_accounts_data.extend(account_data)
+            school_param = self.request.GET.get('school')
+            account_name_param = self.request.GET.get('account_name')
 
-            school_param = request.GET.get('school')
-            account_name_param = request.GET.get('account_name')
+            filtered_data = self.filter_data(data, school_param, account_name_param)
 
-            filtered_data = self.filter_data(all_accounts_data, school_param, account_name_param)
-
-            return JsonResponse({'accounts_data': filtered_data})
+            return Response({'accounts_data': filtered_data})
 
         except FileNotFoundError:
-            return JsonResponse({'error': 'File not found'}, status=404)
+            return Response({'error': 'File not found'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            return Response({'error': str(e)}, status=500)
 
     def filter_data(self, data, school_param, account_name_param):
         filtered_data = []
 
         for item in data:
-            if school_param and item.get('school') is not None and item.get('school') != int(school_param):
-                print(f"Skipping item {item['id']} due to school mismatch (expected {school_param}, got {item['school']})")
-                continue
-
-            if account_name_param and item.get('login') is not None and item.get('login') != account_name_param:
-                print(f"Skipping item {item['id']} due to account name mismatch (expected {account_name_param}, got {item['login']})")
-                continue
-
-            post_data = {
-                'id': item.get('id'),
-                'text': item.get('text'),
-                'timestamp': item.get('timestamp'),
-                'media': [],
-                'login': item.get('login') if item.get('login') is not None else 'N/A',
-                'school': item.get('school') if item.get('school') is not None else 'N/A'
-            }
-
-            for media_item in item.get('media'):
-                media_data = {
-                    'url': media_item['url'],
-                    'is_video': media_item['is_video']
-                }
-
-                # Добавление thumbnail_url для видео
-                if media_item['is_video']:
-                    media_data['thumbnail_url'] = media_item.get('thumbnail_url', 'N/A')
-
-                post_data['media'].append(media_data)
-
-            filtered_data.append(post_data)
+            if (school_param is None or str(item.get('school')) == school_param) and \
+               (account_name_param is None or item.get('login') == account_name_param):
+                filtered_data.append(item)
 
         return filtered_data

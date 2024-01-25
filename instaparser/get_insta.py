@@ -2,9 +2,30 @@ import os
 import requests
 import pickle
 
+def extract_instagram_login_from_url(url):
+    try:
+        # Удаляем возможные концевые слеши
+        url = url.rstrip('/')
+
+        # Разбиваем URL по "/" и извлекаем последний фрагмент
+        parts = url.split('/')
+        instagram_login = parts[-1]
+
+        return instagram_login
+
+    except Exception as e:
+        print("Ошибка при извлечении логина из URL:", e)
+        return None
+
 def save_school_socialmedia_data(school_socialmedia_data, pickle_directory):
     try:
-        instagram_data = [data for data in school_socialmedia_data if data.get('type') == 'instagram']
+        instagram_data = [
+            {
+                'type': data.get('type'),
+                'account_name': extract_instagram_login_from_url(data.get('account_name'))
+            }
+            for data in school_socialmedia_data if data.get('type') == 'instagram'
+        ]
 
         print("Instagram Data Before Saving:")
         print(instagram_data)

@@ -5,7 +5,13 @@ import time
 import requests
 import qrcode
 import random
+import sys
+import django
 from django.conf import settings
+
+sys.path.append('C:/Users/dg078/Desktop/asdd/zzz/zzz')  # Путь к папке, содержащей ваш файл settings.py
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kestesikz.settings")  # Указываем путь к файлу settings.py
+django.setup()
 
 def download_posts_data(instagram_data_path, posts_per_account, pickle_directory, media_directory):
     try:
@@ -27,6 +33,9 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
             instagram_data = pickle.load(instagram_data_file)
 
         accounts_data = []
+
+        # Ваш путь к медиафайлам в URL
+        media_url_prefix = settings.MEDIA_URL
 
         for data in instagram_data:
             account_name = data.get('account_name')
@@ -88,7 +97,7 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                         img.save(qr_code_path)
                         print(f"Generated QR code for video: {qr_code_path}")
 
-                        post_data['qr_code'] = os.path.relpath(qr_code_path, settings.MEDIA_ROOT)  # Обновляем qr_code для всего поста
+                        post_data['qr_code'] = os.path.join(media_url_prefix, 'instaparser', os.path.relpath(qr_code_path, settings.MEDIA_ROOT)).replace("\\", "/")
                         post_data['media'].append(media_data)
 
                     elif post.typename == 'GraphSidecar':
@@ -119,16 +128,16 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                                 img.save(qr_code_path)
                                 print(f"Generated QR code for video: {qr_code_path}")
 
-                                post_data['qr_code'] = os.path.relpath(qr_code_path, settings.MEDIA_ROOT)  # Обновляем qr_code для всего поста
+                                post_data['qr_code'] = os.path.join(media_url_prefix, 'instaparser', os.path.relpath(qr_code_path, settings.MEDIA_ROOT)).replace("\\", "/")
                                 post_data['media'].append(media_data) # Обновляем qr_code для текущего элемента карусели
                             else:
                                 # Если у элемента карусели изображение
                                 time.sleep(random.uniform(3, 6))
 
-                                media_file_name = f"{post.mediaid}_{index}.jpg"
-                                media_data[f'post_photos_{index + 1}'] = media_file_name
+                                media_file_name = f"{post.mediaid}_{index + 1}.jpg"
+                                media_data[f'post_photos_{index + 1}'] = os.path.join(media_url_prefix, 'instaparser', media_file_name).replace("\\", "/")
                                 
-                                media_file_path = os.path.join(settings.MEDIA_ROOT, media_file_name)
+                                media_file_path = os.path.join(settings.MEDIA_ROOT, 'instaparser', media_file_name)
                                 with open(media_file_path, 'wb') as media_file:
                                     media_file.write(requests.get(node.display_url).content)
                                 
@@ -142,9 +151,9 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                         time.sleep(random.uniform(3, 6))
 
                         media_file_name = f"{post.mediaid}_1.jpg"
-                        media_data[f'post_photos_1'] = media_file_name
+                        media_data[f'post_photos_1'] = os.path.join(media_url_prefix, 'instaparser', media_file_name).replace("\\", "/")
                         
-                        media_file_path = os.path.join(settings.MEDIA_ROOT, media_file_name)
+                        media_file_path = os.path.join(settings.MEDIA_ROOT, 'instaparser', media_file_name)
                         with open(media_file_path, 'wb') as media_file:
                             media_file.write(requests.get(post.url).content)
                         
@@ -173,6 +182,7 @@ if __name__ == "__main__":
     instagram_data_path = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser/school_socialmedia_data.pickle'
     posts_per_account = 1
     pickle_directory = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser'
-    media_directory = os.path.join(settings.MEDIA_ROOT)
+    media_directory = os.path.join(settings.MEDIA_ROOT, 'instaparser')
 
     download_posts_data(instagram_data_path, posts_per_account, pickle_directory, media_directory)
+

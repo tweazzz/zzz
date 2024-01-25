@@ -453,26 +453,54 @@ class School_SocialMedia(models.Model):
     def __str__(self):
         return f'{self.school} Social Media {self.type}'
     
+    def get_instagram_url(self):
+        if self.type == self.INSTAGRAM:
+            # Убедимся, что self.account_name не содержит уже добавленный URL Instagram
+            if not self.account_name.startswith("https://www.instagram.com/"):
+                return f"https://www.instagram.com/{self.account_name}/"
+            return self.account_name
+        return None
+
     def save(self, *args, **kwargs):
-        if not self.qr_code:
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
-            )
-            qr.add_data(f"{self.type}: {self.account_name}")
-            qr.make(fit=True)
-
-            img = qr.make_image(fill_color="black", back_color="white")
-            buffer = BytesIO()
-            img.save(buffer)
-            filename = f'qr_code.png'
-
-            self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+        # Если тип социальной сети - Instagram, сохраняем URL в поле account_name
+        if self.type == self.INSTAGRAM:
+            self.account_name = self.get_instagram_url()
 
         super().save(*args, **kwargs)
+from django.db.models.signals import pre_save
+@receiver(pre_save, sender=School_SocialMedia)
+def generate_or_update_qr_code(sender, instance, **kwargs):
+    # Генерируем или обновляем QR-код и сохраняем его в поле qr_code
+    if instance.type == instance.INSTAGRAM:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
 
+        # Используем URL Instagram при создании QR-кода
+        url = instance.get_instagram_url()
+        qr.add_data(url)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = BytesIO()
+        img.save(buffer)
+        filename = f'qr_code.png'
+
+        # Если у объекта уже есть QR-код, удалим его перед сохранением нового
+        if instance.qr_code:
+            instance.qr_code.delete(False)
+
+        instance.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+
+@receiver(pre_delete, sender=School_SocialMedia)
+def delete_qr_code(sender, instance, **kwargs):
+    # Удаляем QR-код при удалении социальной медиа
+    print("Deleting QR code for", instance)
+    if instance.qr_code:
+        instance.qr_code.delete(False)
 
 class School_Administration(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
