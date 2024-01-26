@@ -19,6 +19,7 @@ def extract_instagram_login_from_url(url):
 
 def save_school_socialmedia_data(school_socialmedia_data, pickle_directory):
     try:
+        # Извлекаем Instagram-данные
         instagram_data = [
             {
                 'type': data.get('type'),
@@ -30,11 +31,20 @@ def save_school_socialmedia_data(school_socialmedia_data, pickle_directory):
         print("Instagram Data Before Saving:")
         print(instagram_data)
 
-        pickle_file_path = os.path.join(pickle_directory, 'school_socialmedia_data.pickle')
-        with open(pickle_file_path, 'wb') as pickle_file:
-            pickle.dump(instagram_data, pickle_file)
+        # Определение количества пикл-файлов
+        num_pickles = (len(instagram_data) // 7) + (len(instagram_data) % 7 > 0)
 
-        print(f"Данные о школах и аккаунтах Instagram успешно сохранены в {pickle_file_path}")
+        # Создаем пикл-файлы
+        for i in range(num_pickles):
+            chunk_start = i * 7
+            chunk_end = (i + 1) * 7
+            chunk = instagram_data[chunk_start:chunk_end]
+
+            pickle_file_path = os.path.join(pickle_directory, f'{i + 1}.pickle')
+            with open(pickle_file_path, 'wb') as pickle_file:
+                pickle.dump(chunk, pickle_file)
+
+            print(f"Данные о школах и аккаунтах Instagram (часть {i + 1}) успешно сохранены в {pickle_file_path}")
 
     except Exception as e:
         print("Ошибка при сохранении данных:", e)
@@ -55,6 +65,6 @@ def fetch_instagram_data(api_url, pickle_directory):
 
 if __name__ == "__main__":
     api_url = 'https://www.bilimge.kz/admins/api/School_SocialMediaApi/'
-    pickle_directory = 'C:/Users/dg078/Desktop/instaloader'
+    pickle_directory = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser'
 
     fetch_instagram_data(api_url, pickle_directory)

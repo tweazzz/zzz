@@ -449,6 +449,7 @@ class School_SocialMedia(models.Model):
 
     class Meta:
         verbose_name_plural = "School Social Media"
+        unique_together = ['school', 'type']
 
     def __str__(self):
         return f'{self.school} Social Media {self.type}'
