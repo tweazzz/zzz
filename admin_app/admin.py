@@ -6,6 +6,7 @@ from auth_user.models import User
 
 
 
+
 class JobHistoryInline(admin.TabularInline):
     model = JobHistory
     extra = 1

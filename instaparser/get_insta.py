@@ -65,6 +65,6 @@ def fetch_instagram_data(api_url, pickle_directory):
 
 if __name__ == "__main__":
     api_url = 'https://www.bilimge.kz/admins/api/School_SocialMediaApi/'
-    pickle_directory = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser'
+    pickle_directory = './instaparser'
 
     fetch_instagram_data(api_url, pickle_directory)

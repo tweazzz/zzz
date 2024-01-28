@@ -600,7 +600,7 @@ import os
 class GetPostsDataView(GenericAPIView):
     def get(self, request, *args, **kwargs):
         try:
-            pickle_file_path = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser/instagram_data.pickle'
+            pickle_file_path = 'C:/Users/Professional/Desktop/zxxxzzxz/zzz/instaparser/common_instagram_data.pickle'
 
             with open(pickle_file_path, 'rb') as pickle_file:
                 data = pickle.load(pickle_file)

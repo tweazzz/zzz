@@ -8,13 +8,14 @@ import random
 import sys
 import django
 from django.conf import settings
-from django.http import request
+from django.http import HttpRequest
+from datetime import datetime
 
-sys.path.append('C:/Users/dg078/Desktop/asdd/zzz/zzz')  
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kestesikz.settings")  
+sys.path.append('C:/Users/Professional/Desktop/zxxxzzxz/zzz')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kestesikz.settings")
 django.setup()
 
-def download_posts_data(instagram_data_path, posts_per_account, pickle_directory, media_directory):
+def download_posts_data(posts_per_account, pickle_directory, media_directory,base_url):
     max_retries = 20
     retries = 0
 
@@ -30,12 +31,17 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
             L.context.debug = True
 
             L.login(username, password)
-            
-            with open(instagram_data_path, 'rb') as instagram_data_file:
+
+            # Определение текущего дня недели
+            current_weekday = datetime.now().weekday()
+
+            # Формирование пути к пикл-файлу текущего дня
+            current_instagram_pickle_path = os.path.join(pickle_directory, f"{current_weekday + 1}.pickle")
+
+            with open(current_instagram_pickle_path, 'rb') as instagram_data_file:
                 instagram_data = pickle.load(instagram_data_file)
 
             accounts_data = []
-
             media_url_prefix = settings.MEDIA_URL
 
             for data in instagram_data:
@@ -76,13 +82,11 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                             print('video')
                             media_data = {}
 
-                            # Увеличьте время ожидания перед запросом к видео
                             time.sleep(random.uniform(10, 15))
 
                             video_url = f"https://www.instagram.com/p/{post.shortcode}/"
                             qr_code_path = os.path.join(media_directory, f"{post.mediaid}_video_qr.png")
 
-                            # Генерация QR-кода для видео
                             qr = qrcode.QRCode(
                                 version=1,
                                 error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -96,7 +100,7 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                             img.save(qr_code_path)
                             print(f"Generated QR code for video: {qr_code_path}")
 
-                            post_data['qr_code'] = f"http://127.0.0.1:8000{media_url_prefix}instaparser/{os.path.relpath(qr_code_path, settings.MEDIA_ROOT).replace('\\', '/')}"
+                            post_data['qr_code'] = f"{base_url}{media_url_prefix}{os.path.relpath(qr_code_path, settings.MEDIA_ROOT).replace(os.path.sep, '/')}"
 
                             post_data['media'].append(media_data)
 
@@ -105,14 +109,12 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                             for index, node in enumerate(post.get_sidecar_nodes()):
                                 media_data = {}
 
-                                # Добавьте дополнительное время ожидания перед запросом к элементу карусели
                                 time.sleep(random.uniform(3, 6))
 
                                 if node.is_video:
                                     video_url = f"https://www.instagram.com/p/{post.shortcode}/"
                                     qr_code_path = os.path.join(media_directory, f"{post.mediaid}_video_qr.png")
 
-                                    # Генерация QR-кода для видео
                                     qr = qrcode.QRCode(
                                         version=1,
                                         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -126,14 +128,15 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                                     img.save(qr_code_path)
                                     print(f"Generated QR code for video: {qr_code_path}")
 
-                                    post_data['qr_code'] = f"http://127.0.0.1:8000{media_url_prefix}instaparser/{os.path.relpath(qr_code_path, settings.MEDIA_ROOT).replace('\\', '/')}"
+                                    post_data['qr_code'] = f"{base_url}{media_url_prefix}{os.path.relpath(qr_code_path, settings.MEDIA_ROOT).replace(os.path.sep, '/')}"
 
-                                    post_data['media'].append(media_data)  # Обновляем qr_code для текущего элемента карусели
+
+                                    post_data['media'].append(media_data)
                                 else:
                                     time.sleep(random.uniform(3, 6))
 
                                     media_file_name = f"{post.mediaid}_{index + 1}.jpg"
-                                    media_data[f'post_photos_{index + 1}'] = f"http://127.0.0.1:8000{media_url_prefix}instaparser{media_file_name}"
+                                    media_data[f'post_photos_{index + 1}'] = f"{base_url}{media_url_prefix}instaparser/{media_file_name}"
 
                                     media_file_path = os.path.join(settings.MEDIA_ROOT, 'instaparser', media_file_name)
                                     with open(media_file_path, 'wb') as media_file:
@@ -148,7 +151,7 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
                             time.sleep(random.uniform(3, 6))
 
                             media_file_name = f"{post.mediaid}_1.jpg"
-                            media_data[f'post_photos_1'] = f"http://127.0.0.1:8000{media_url_prefix}instaparser{media_file_name}"
+                            media_data[f'post_photos_1'] = f"{base_url}{media_url_prefix}instaparser/{media_file_name}"
 
                             media_file_path = os.path.join(settings.MEDIA_ROOT, 'instaparser', media_file_name)
                             with open(media_file_path, 'wb') as media_file:
@@ -159,28 +162,28 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
 
                         account_data.append(post_data)
                         count += 1
-                        time.sleep(random.uniform(3, 6))  # Добавим случайную задержку от 3 до 6 секунд для эмуляции человеческого поведения
+                        time.sleep(random.uniform(3, 6))
 
                     except Exception as e:
                         print(f"Failed to fetch metadata for post {post.mediaid}. Error: {e}")
 
                 accounts_data.extend(account_data)
 
-            instagram_pickle_path = os.path.join(pickle_directory, 'instagram_data.pickle')
-            with open(instagram_pickle_path, 'ab') as instagram_pickle_file:
-                pickle.dump(accounts_data, instagram_pickle_file)
+            # Общий пикл-файл
+            common_instagram_pickle_path = os.path.join(pickle_directory, 'common_instagram_data.pickle')
+            with open(common_instagram_pickle_path, 'ab') as common_instagram_pickle_file:
+                pickle.dump(accounts_data, common_instagram_pickle_file)
 
-            print(f"Данные Instagram успешно сохранены в pickle файл: {instagram_pickle_path}")
+            print(f"Данные Instagram успешно сохранены в общий pickle файл: {common_instagram_pickle_path}")
 
-            # Если мы дошли сюда, значит все прошло успешно, выходим из цикла
             break
 
         except instaloader.exceptions.InstaloaderException as e:
             print(f"Ошибка при входе в аккаунт Instagram: {e}")
             retries += 1
             if retries < max_retries:
-                print(f"Повторная попытка {retries}/{max_retries} через 2 минут...")
-                time.sleep(2 * 60)  # Подождать 2 минут перед следующей попыткой
+                print(f"Повторная попытка {retries}/{max_retries} через 5 минут...")
+                time.sleep(5*60)
             else:
                 print("Достигнуто максимальное количество попыток. Программа завершает выполнение.")
                 sys.exit(1)
@@ -188,13 +191,11 @@ def download_posts_data(instagram_data_path, posts_per_account, pickle_directory
             print(f"Неожиданная ошибка: {e}")
             sys.exit(1)
 
-from django.http import HttpRequest
+# Остальной код
 if __name__ == "__main__":
-    instagram_data_path = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser/school_socialmedia_data.pickle'
     posts_per_account = 1
-    pickle_directory = 'C:/Users/dg078/Desktop/asdd/zzz/zzz/instaparser/'
+    pickle_directory = 'C:/Users/Professional/Desktop/zxxxzzxz/zzz/instaparser/'
+    base_url = "http://127.0.0.1:8000/"
     media_directory = os.path.join(settings.MEDIA_ROOT, 'instaparser')
-    request = HttpRequest()
-    request.META['SERVER_NAME'] = 'localhost:8000'
 
-    download_posts_data(instagram_data_path, posts_per_account, pickle_directory, media_directory)
+    download_posts_data(posts_per_account, pickle_directory, media_directory)
