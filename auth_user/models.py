@@ -12,7 +12,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
     username = models.CharField(_('username'), max_length=30, unique=True)
     password = models.CharField(_('password'), max_length=128)
-    fio = models.CharField('FIO', max_length=255, null=True, blank=True)
+    phone_number = models.CharField(max_length=12)
     school = models.ForeignKey(School, on_delete=models.CASCADE, null=True, blank=True, related_name='admin_user')
     date_joined = models.DateTimeField(default=timezone.now, null=True)
     is_active = models.BooleanField(default=True)
@@ -53,10 +53,13 @@ def check_school_uniqueness(sender, instance, **kwargs):
 
 class PasswordResetToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    email = models.EmailField(blank=True)
+    phone_number = models.CharField(blank=True, max_length=12)
     code = models.CharField(max_length=4)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return f'Reset Token for {self.user.username}'
+    
+
+    # EREPAH9KLNYWPXCDZZLPLT2W
