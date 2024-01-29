@@ -9,14 +9,13 @@ from .serializers import CustomUserCreateSerializer, CustomTokenCreateSerializer
 from djoser.views import UserViewSet, TokenCreateView
 from .serializers import CustomUserSerializer 
 from django.contrib.auth import get_user_model
-from .utils import generate_random_code, send_reset_code_email
+from .utils import generate_random_code, send_reset_code_sms
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
-from .utils import send_verification
 
 
 
@@ -47,17 +46,8 @@ class ClientUserCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=mutable_data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-
-        user = User.objects.get(email=mutable_data['email'])
-        # Устанавливаем флаг is_active в False
-        user.is_active = False
-        user.save()
-
-        # Отправляем письмо с подтверждением аккаунта
-        send_verification(user, request)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
 
 class CustomTokenCreateView(TokenCreateView):
     serializer_class = CustomTokenCreateSerializer
@@ -76,11 +66,11 @@ from django.utils import timezone
 @api_view(['POST'])
 def send_reset_code(request):
     if request.method == 'POST':
-        email = request.data.get('email')
+        phone_number = request.data.get('phone_number')
 
         try:
-            # Поиск пользователя по email
-            user = User.objects.get(email=email, role='client')
+            # Поиск пользователя по phone_number
+            user = User.objects.get(phone_number=phone_number, role='client')
         except User.DoesNotExist:
             return Response({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -88,7 +78,7 @@ def send_reset_code(request):
         reset_token, created = PasswordResetToken.objects.get_or_create(user=user)
 
         error_response = Response(
-            {'error': 'The code has already been sent to your email'},
+            {'error': 'The code has already been sent to your phone_number'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -105,15 +95,15 @@ def send_reset_code(request):
 
         # Обновление записи в таблице PasswordResetToken
         reset_token.code = new_code
-        reset_token.email = email
+        reset_token.phone_number = phone_number
         reset_token.is_active = True
         reset_token.created_at = timezone.now()
         reset_token.save()
 
         # Отправка кода на почту пользователя
-        send_reset_code_email(user.email, new_code)
+        send_reset_code_sms(user.phone_number, new_code)
 
-        return Response({'message': 'The code has been successfully sent to your email'}, status=status.HTTP_200_OK)
+        return Response({'message': 'The code has been successfully sent to your phone_number'}, status=status.HTTP_200_OK)
 
     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -141,11 +131,11 @@ def verify_reset_code(request):
 @api_view(['POST'])
 def reset_password(request):
     # Получаем email и код из запроса
-    email = request.data.get('email')
+    phone_number = request.data.get('phone_number')
     code = request.data.get('code')
 
     # Поиск токена сброса пароля
-    reset_token = get_object_or_404(PasswordResetToken, code=code, email=email, is_active=True)
+    reset_token = get_object_or_404(PasswordResetToken, code=code, phone_number=phone_number, is_active=True)
 
     # Получаем пользователя, связанного с токеном
     user = reset_token.user

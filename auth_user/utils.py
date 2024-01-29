@@ -1,75 +1,33 @@
 import random
 import string
 from django.core.mail import send_mail
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.shortcuts import redirect
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.sites.shortcuts import get_current_site
-from django.conf import settings
-from .tokens import account_activation_token  # Предполагается, что у вас есть файл tokens.py с определением токена
-from typing import Type
-from .models import User
+import os
+from twilio.rest import Client
 
+# Ваши учетные данные из Twilio
+account_sid = "AC9e0bded21e7a727b1f4b9fc67e28bf40"
+auth_token = "a83db74c4ea43fffccb639723c2cdc38"
+verify_sid = "VAb52a1f5df7e3dde69946a4a571718293"
+twilio_number = "+77475204678"
+
+# Создаем клиента Twilio
+client = Client(account_sid, auth_token)
 
 def generate_random_code(length=4):
     """Генерация случайного кода указанной длины."""
     return ''.join(random.choices(string.digits, k=length))
 
-def send_reset_code_email(email, code):
-    """Отправка электронного письма с кодом сброса пароля."""
-    subject = 'Code for reset password'
-    message = f'Your code: {code}'
-    from_email = 'akimzhankonarbayev@yandex.ru'
-    recipient_list = [email]
-    send_mail(subject, message, from_email, recipient_list)
-
-
-def send_verification(instance: Type[User], request):
-    subject = 'Добро пожаловать!'
-    from_mail = settings.EMAIL_HOST_USER
-    to_list = [instance.email, ]
-    current_site = get_current_site(request)
-    domain_name = current_site.domain
-    if 'media.' in domain_name:
-        domain_name = domain_name.replace('media.', '')
-    protocol = 'https://' if request.is_secure() else 'http://'
-    email_tmp = render_to_string(
-        'client_email_verify.html',
-        {
-            'domain': protocol + domain_name,
-            'uid': urlsafe_base64_encode(force_bytes(instance.pk)),
-            'token': account_activation_token.make_token(instance)
-        }
-    )
-    as_send_email(subject, email_tmp, from_mail, to_list)
-
-
-def as_send_email(subject, email_tmp, from_mail, to_list):
-    msg = EmailMultiAlternatives(subject, email_tmp, from_mail, to_list)
-    msg.attach_alternative(email_tmp, "text/html")
-    msg.send()
-
-
-def activate(request, uidb64, token):
-    url = activate_user(request, uidb64, token)
-    return redirect(url)
-
-
-def activate_user(request, uidb64, token):
-    uid = force_str(urlsafe_base64_decode(uidb64))
-    current_site = get_current_site(request)
-    domain_name = current_site.domain.split(":")[0]
-    if 'media.' in domain_name:
-        domain_name = domain_name.replace('media.', '')
-    protocol = "https://" if request.is_secure() else "http://"
-    url = f"{protocol}{domain_name}/"
+def send_reset_code_sms(phone_number, code):
+    """Отправка SMS с кодом сброса пароля."""
     try:
-        user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-    if user is not None and account_activation_token.check_token(user, token):
-        user.is_active = True
-        user.save()
-    return url
+        message = client.messages.create(
+            body=f'Your code: {code}',
+            from_=twilio_number,
+            to=phone_number
+        )
+        print(f'SMS отправлено с SID: {message.sid}')
+        return True
+    except Exception as e:
+        print(f'Ошибка отправки SMS: {str(e)}')
+        return False
+
