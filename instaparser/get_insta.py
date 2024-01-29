@@ -23,7 +23,8 @@ def save_school_socialmedia_data(school_socialmedia_data, pickle_directory):
         instagram_data = [
             {
                 'type': data.get('type'),
-                'account_name': extract_instagram_login_from_url(data.get('account_name'))
+                'account_name': extract_instagram_login_from_url(data.get('account_name')),
+                'school': data.get('school')
             }
             for data in school_socialmedia_data if data.get('type') == 'instagram'
         ]
