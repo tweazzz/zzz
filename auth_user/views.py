@@ -16,6 +16,7 @@ from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
+from .utils import send_verification
 
 
 
@@ -46,8 +47,17 @@ class ClientUserCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=mutable_data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
+        user = User.objects.get(email=mutable_data['email'])
+        # Устанавливаем флаг is_active в False
+        user.is_active = False
+        user.save()
+
+        # Отправляем письмо с подтверждением аккаунта
+        send_verification(user, request)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
 
 class CustomTokenCreateView(TokenCreateView):
     serializer_class = CustomTokenCreateSerializer
