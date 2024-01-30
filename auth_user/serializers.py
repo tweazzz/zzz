@@ -106,4 +106,4 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
     
 class PasswordResetVerifySerializer(serializers.Serializer):
     code = serializers.CharField(max_length=4, required=True)
-    email = serializers.EmailField()
+    phone_number = serializers.CharField(max_length=13, required=True)

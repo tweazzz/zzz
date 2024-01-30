@@ -32,6 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         verbose_name_plural = 'Users'
+        unique_together = ['phone_number']
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -63,3 +64,16 @@ class PasswordResetToken(models.Model):
     
 
     # EREPAH9KLNYWPXCDZZLPLT2W
+
+class PhoneVerificationCode(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(blank=True, max_length=12)
+    code = models.CharField(max_length=4)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f'Phone Verification Code for {self.user.username}'
+    
+
+
