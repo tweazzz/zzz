@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from django.conf import settings
 from django.conf.urls.static import static
 from djoser.views import TokenCreateView
-from auth_user.views import AdminUserCreateView,CustomTokenCreateView,CustomUserViewSet
+from auth_user.views import AdminUserCreateView,CustomTokenCreateView,CustomUserViewSet,UserMeView
 
 
 admin_router = DefaultRouter()
@@ -51,6 +51,7 @@ urlpatterns = [
     path('api/teacher/upload_photo/', TeacherApi.as_view({'post': 'upload_photo'}), name='upload_photo'),
     path('api/schoolpasport/upload_photo/', schoolPasportApi.as_view({'post': 'upload_photo'}), name='upload_photo'),
     path('get_posts_data/', GetPostsDataView.as_view(), name='get_posts_data'),
+    path('users/me/', UserMeView.as_view(), name='user-me'),
 ]
 
 if settings.DEBUG:

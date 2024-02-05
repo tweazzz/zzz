@@ -32,7 +32,21 @@ class CustomUserSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-    
+
+class UserMeSerializer(serializers.ModelSerializer):
+    fio = serializers.CharField(required=False)
+    school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'fio', 'school', 'role', 'is_superuser')
+        extra_kwargs = {
+            'fio': {'read_only': True},
+            'school': {'read_only': True},
+            'role': {'read_only': True},
+        }
+
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
     role = serializers.CharField(write_only=True)
     fio = serializers.CharField(required=False)
@@ -89,7 +103,7 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             request_path = self.context.get("request").path
             if 'client' in request_path and self.user.role != 'client':
                 raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})
-            elif 'admin' in request_path and self.user.role != 'admin':
+            elif 'admin' in request_path and (self.user.role != 'admin' and not self.user.is_superuser):
                 raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})
             return attrs
 
@@ -106,4 +120,4 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
     
 class PasswordResetVerifySerializer(serializers.Serializer):
     code = serializers.CharField(max_length=4, required=True)
-    phone_number = serializers.CharField(max_length=13, required=True)
+    email = serializers.EmailField(required=True)

@@ -8,13 +8,14 @@ import random
 import sys
 import django
 from django.conf import settings
+from django.http import HttpRequest
 from datetime import datetime
 
-sys.path.append('C:/Users/Professional/Desktop/zxxxzzxz/zzz')
+sys.path.append('C:/Users/dg078/Desktop/asdd/zzz')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kestesikz.settings")
 django.setup()
 
-def download_posts_data(posts_per_account, pickle_directory, media_directory,base_url):
+def download_posts_data(posts_per_account, pickle_directory, media_directory, base_url):
     max_retries = 20
     retries = 0
 
@@ -23,8 +24,8 @@ def download_posts_data(posts_per_account, pickle_directory, media_directory,bas
             L = instaloader.Instaloader()
 
             # Замените 'your_instagram_username' и 'your_instagram_password' на ваши реальные учетные данные
-            username = 'gggg_gkkkkllll'
-            password = '777kaz777'
+            username = 'tw3az'
+            password = '888kaz888'
 
             L.context.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"}
             L.context.debug = True
@@ -35,13 +36,21 @@ def download_posts_data(posts_per_account, pickle_directory, media_directory,bas
             current_weekday = datetime.now().weekday()
 
             # Формирование пути к пикл-файлу текущего дня
-            current_instagram_pickle_path = os.path.join(pickle_directory, f"{current_weekday + 1}.pickle")
+            current_instagram_pickle_path = os.path.join(pickle_directory, f"{current_weekday + 2}.pickle")
 
             with open(current_instagram_pickle_path, 'rb') as instagram_data_file:
                 instagram_data = pickle.load(instagram_data_file)
 
             accounts_data = []
             media_url_prefix = settings.MEDIA_URL
+
+            # Загрузите существующие данные, если файл уже существует
+            common_instagram_pickle_path = os.path.join(pickle_directory, 'common_instagram_data.pickle')
+            if os.path.exists(common_instagram_pickle_path):
+                with open(common_instagram_pickle_path, 'rb') as common_instagram_pickle_file:
+                    existing_data = pickle.load(common_instagram_pickle_file)
+            else:
+                existing_data = []
 
             for data in instagram_data:
                 account_name = data.get('account_name')
@@ -63,11 +72,17 @@ def download_posts_data(posts_per_account, pickle_directory, media_directory,bas
 
                 count = 0
                 for post in profile.get_posts():
+                    post_id = str(post.mediaid)
+                    if any(existing_post['id'] == post_id for existing_post in existing_data):
+                        print(f"Post {post_id} already exists. Skipping.")
+                        continue
                     if count >= posts_per_account:
                         break
 
+                    # Проверка наличия идентификатора поста в существующих данных
+
                     post_data = {
-                        'id': str(post.mediaid),
+                        'id': post_id,
                         'text': post.caption,
                         'timestamp': post.date_utc.timestamp(),
                         'media': [],
@@ -129,7 +144,6 @@ def download_posts_data(posts_per_account, pickle_directory, media_directory,bas
 
                                     post_data['qr_code'] = f"{base_url}{media_url_prefix}{os.path.relpath(qr_code_path, settings.MEDIA_ROOT).replace(os.path.sep, '/')}"
 
-
                                     post_data['media'].append(media_data)
                                 else:
                                     time.sleep(random.uniform(3, 6))
@@ -168,12 +182,14 @@ def download_posts_data(posts_per_account, pickle_directory, media_directory,bas
 
                 accounts_data.extend(account_data)
 
-            # Общий пикл-файл
-            common_instagram_pickle_path = os.path.join(pickle_directory, 'common_instagram_data.pickle')
-            with open(common_instagram_pickle_path, 'ab') as common_instagram_pickle_file:
-                pickle.dump(accounts_data, common_instagram_pickle_file)
+            # Добавьте новые данные в существующие
+            existing_data.extend(accounts_data)
 
-            print(f"Данные Instagram успешно сохранены в общий pickle файл: {common_instagram_pickle_path}")
+            # Сохраните обновленные данные обратно в common_instagram_data.pickle
+            with open(common_instagram_pickle_path, 'wb') as common_instagram_pickle_file:
+                pickle.dump(existing_data, common_instagram_pickle_file)
+
+            print(f"Данные Instagram успешно добавлены в общий pickle файл: {common_instagram_pickle_path}")
 
             break
 
@@ -193,8 +209,8 @@ def download_posts_data(posts_per_account, pickle_directory, media_directory,bas
 # Остальной код
 if __name__ == "__main__":
     posts_per_account = 1
-    pickle_directory = 'C:/Users/Professional/Desktop/zxxxzzxz/zzz/instaparser/'
+    pickle_directory = 'C:/Users/dg078/Desktop/asdd/zzz/instaparser/'
     base_url = "http://127.0.0.1:8000/"
     media_directory = os.path.join(settings.MEDIA_ROOT, 'instaparser')
 
-    download_posts_data(posts_per_account, pickle_directory, media_directory)
+    download_posts_data(posts_per_account, pickle_directory, media_directory, base_url)

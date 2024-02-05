@@ -1,6 +1,6 @@
 from django.db import models
 from colorfield.fields import ColorField
-
+from django.db.models.signals import pre_save
 import datetime
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -468,7 +468,7 @@ class School_SocialMedia(models.Model):
             self.account_name = self.get_instagram_url()
 
         super().save(*args, **kwargs)
-from django.db.models.signals import pre_save
+
 @receiver(pre_save, sender=School_SocialMedia)
 def generate_or_update_qr_code(sender, instance, **kwargs):
     # Генерируем или обновляем QR-код и сохраняем его в поле qr_code

@@ -12,7 +12,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
     username = models.CharField(_('username'), max_length=30, unique=True)
     password = models.CharField(_('password'), max_length=128)
-    phone_number = models.CharField(max_length=12)
     school = models.ForeignKey(School, on_delete=models.CASCADE, null=True, blank=True, related_name='admin_user')
     date_joined = models.DateTimeField(default=timezone.now, null=True)
     is_active = models.BooleanField(default=True)
@@ -32,7 +31,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         verbose_name_plural = 'Users'
-        unique_together = ['phone_number']
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -54,7 +52,7 @@ def check_school_uniqueness(sender, instance, **kwargs):
 
 class PasswordResetToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(blank=True, max_length=12)
+    email = models.EmailField(null=True)
     code = models.CharField(max_length=4)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=False)
@@ -63,14 +61,12 @@ class PasswordResetToken(models.Model):
         return f'Reset Token for {self.user.username}'
     
 
-    # EREPAH9KLNYWPXCDZZLPLT2W
-
-class PhoneVerificationCode(models.Model):
+class EmailVerificationCode(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(blank=True, max_length=12)
+    email = models.EmailField(null=True)
     code = models.CharField(max_length=4)
     created_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return f'Phone Verification Code for {self.user.username}'

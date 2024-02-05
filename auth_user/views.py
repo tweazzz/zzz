@@ -1,21 +1,22 @@
 from django.shortcuts import render
-from .models import User,PasswordResetToken,PhoneVerificationCode
+from .models import User,PasswordResetToken,EmailVerificationCode
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework import status
-from .serializers import CustomUserCreateSerializer, CustomTokenCreateSerializer
+from .serializers import CustomUserCreateSerializer, CustomTokenCreateSerializer,UserMeSerializer
 from djoser.views import UserViewSet, TokenCreateView
 from .serializers import CustomUserSerializer 
 from django.contrib.auth import get_user_model
-from .utils import generate_random_code, send_reset_code_sms
+from .utils import generate_random_code, send_reset_code_email,send_verification_code_email
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
+from rest_framework.permissions import IsAuthenticated
 
 
 
@@ -62,16 +63,33 @@ class CustomTokenCreateView(TokenCreateView):
             status=status.HTTP_200_OK
         )
 
+class UserMeView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserMeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 from django.utils import timezone
 
 @api_view(['POST'])
 def send_reset_code(request):
     if request.method == 'POST':
-        phone_number = request.data.get('phone_number')
+        email = request.data.get('email')
 
         try:
             # Поиск пользователя по phone_number
-            user = User.objects.get(phone_number=phone_number, role='client')
+            user = User.objects.get(email=email, role='client')
         except User.DoesNotExist:
             return Response({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -79,7 +97,7 @@ def send_reset_code(request):
         reset_token, created = PasswordResetToken.objects.get_or_create(user=user)
 
         error_response = Response(
-            {'error': 'The code has already been sent to your phone_number'},
+            {'error': 'The code has already been sent to your email'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -87,7 +105,6 @@ def send_reset_code(request):
         if reset_token.is_active and timezone.now() - reset_token.created_at > timezone.timedelta(minutes=2):
             reset_token.is_active = False
             reset_token.save()
-            return error_response
         elif reset_token.is_active:
             return error_response
     
@@ -96,15 +113,15 @@ def send_reset_code(request):
 
         # Обновление записи в таблице PasswordResetToken
         reset_token.code = new_code
-        reset_token.phone_number = phone_number
+        reset_token.email = email
         reset_token.is_active = True
         reset_token.created_at = timezone.now()
         reset_token.save()
 
         # Отправка кода на почту пользователя
-        send_reset_code_sms(user.phone_number, new_code)
+        send_reset_code_email(user.email, new_code)
 
-        return Response({'message': 'The code has been successfully sent to your phone_number'}, status=status.HTTP_200_OK)
+        return Response({'message': 'The code has been successfully sent to your email'}, status=status.HTTP_200_OK)
 
     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -119,24 +136,24 @@ def verify_reset_code(request):
     if serializer.is_valid():
         # Получаем код и phone_number из сериализатора
         code = serializer.validated_data['code']
-        phone_number = serializer.validated_data['phone_number']
+        email = serializer.validated_data['email']
 
         # Поиск токена сброса пароля
-        reset_token = get_object_or_404(PasswordResetToken, code=code, user__phone_number=phone_number, is_active=True)
+        reset_token = get_object_or_404(PasswordResetToken, code=code, user__email=email, is_active=True)
 
         # Возвращаем информацию для проверки кода и емейла
-        return Response({'message': 'Код подтвержден', 'phone_number': phone_number}, status=status.HTTP_200_OK)
+        return Response({'message': 'Код подтвержден', 'email': email}, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def reset_password(request):
     # Получаем email и код из запроса
-    phone_number = request.data.get('phone_number')
+    email = request.data.get('email')
     code = request.data.get('code')
 
     # Поиск токена сброса пароля
-    reset_token = get_object_or_404(PasswordResetToken, code=code, phone_number=phone_number, is_active=True)
+    reset_token = get_object_or_404(PasswordResetToken, code=code, email=email, is_active=True)
 
     # Получаем пользователя, связанного с токеном
     user = reset_token.user
@@ -169,19 +186,19 @@ def reset_password(request):
 @api_view(['POST'])
 def send_verification_code(request):
     if request.method == 'POST':
-        phone_number = request.data.get('phone_number')
+        email = request.data.get('email')
 
         try:
             # Поиск пользователя по phone_number
-            user = User.objects.get(phone_number=phone_number, role='client')
+            user = User.objects.get(email=email, role='client')
         except User.DoesNotExist:
             return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         # Создание или обновление записи в PhoneVerificationCode
-        verification_code, created = PhoneVerificationCode.objects.get_or_create(user=user)
+        verification_code, created = EmailVerificationCode.objects.get_or_create(user=user)
 
         error_response = Response(
-            {'error': 'The code has already been sent to your phone_number'},
+            {'error': 'The code has already been sent to your email'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -189,21 +206,20 @@ def send_verification_code(request):
         if verification_code.is_active and timezone.now() - verification_code.created_at > timezone.timedelta(minutes=2):
             verification_code.is_active = False
             verification_code.save()
-            return Response({'error': 'Verification code has expired'}, status=status.HTTP_400_BAD_REQUEST)
         elif verification_code.is_active:
             return error_response
 
         new_code = generate_random_code()
         verification_code.code = new_code
-        verification_code.phone_number = phone_number
+        verification_code.email = email
         verification_code.is_active = True
         verification_code.created_at = timezone.now()
         verification_code.save()
 
         # Отправка кода на телефон пользователя
-        send_reset_code_sms(verification_code.phone_number, verification_code.code)
+        send_verification_code_email(verification_code.email, verification_code.code)
 
-        return Response({'message': 'Verification code has been sent to your phone_number'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Verification code has been sent to your email'}, status=status.HTTP_200_OK)
 
     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -211,11 +227,11 @@ def send_verification_code(request):
 @api_view(['POST'])
 def confirm_verification_code(request):
     # Получаем email и код из запроса
-    phone_number = request.data.get('phone_number')
+    email = request.data.get('email')
     code = request.data.get('code')
 
     # Поиск токена сброса пароля
-    verification_code = get_object_or_404(PhoneVerificationCode, code=code, phone_number=phone_number, is_active=True)
+    verification_code = get_object_or_404(EmailVerificationCode, code=code, email=email, is_active=True)
 
     
     # Получаем пользователя, связанного с токеном
