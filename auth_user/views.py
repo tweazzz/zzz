@@ -7,9 +7,9 @@ from django.http import JsonResponse
 from rest_framework import status
 from .serializers import CustomUserCreateSerializer, CustomTokenCreateSerializer,UserMeSerializer
 from djoser.views import UserViewSet, TokenCreateView
-from .serializers import CustomUserSerializer 
+from .serializers import CustomUserSerializer
 from django.contrib.auth import get_user_model
-from .utils import generate_random_code, send_reset_code_email,send_verification_code_email
+from .utils import generate_random_code, send_reset_code_email, send_verification_code_email
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password
@@ -17,14 +17,42 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.permissions import IsAuthenticated
-
-
+from rest_framework import generics, status, views, viewsets
 
 User = get_user_model()
-class CustomUserViewSet(UserViewSet):
+class AdminUserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     queryset = User.objects.all()
-    http_method_names = ['get','head','options','put','patch']
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        mutable_data = request.data.copy()
+        mutable_data['role'] = 'admin'
+        serializer = self.get_serializer(data=mutable_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class ClientUserViewSet(viewsets.ModelViewSet):
+    serializer_class = CustomUserSerializer
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        mutable_data = request.data.copy()
+        mutable_data['role'] = 'client'
+        serializer = self.get_serializer(data=mutable_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def update(self, request, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs['pk'])  # Получаем пользователя, которого пытаются изменить
+        if user != request.user:  # Проверяем, является ли пользователь, отправивший запрос, тем же пользователем
+            return Response({'error': 'Вы можете изменять только свои собственные данные'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
 
 class AdminUserCreateView(generics.CreateAPIView):
     serializer_class = CustomUserCreateSerializer
@@ -44,7 +72,6 @@ class ClientUserCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         mutable_data = request.data.copy()
         mutable_data['role'] = 'client'
-        mutable_data['is_active'] = False 
         serializer = self.get_serializer(data=mutable_data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -80,6 +107,7 @@ class UserMeView(generics.RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 from django.utils import timezone
 
 @api_view(['POST'])
@@ -107,7 +135,7 @@ def send_reset_code(request):
             reset_token.save()
         elif reset_token.is_active:
             return error_response
-    
+
         # Генерация нового кода
         new_code = generate_random_code()
 
@@ -233,7 +261,7 @@ def confirm_verification_code(request):
     # Поиск токена сброса пароля
     verification_code = get_object_or_404(EmailVerificationCode, code=code, email=email, is_active=True)
 
-    
+
     # Получаем пользователя, связанного с токеном
     user = verification_code.user
 

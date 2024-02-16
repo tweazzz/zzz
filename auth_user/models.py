@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 
 class User(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(_('email address'), unique=True)
+    email = models.EmailField(_('email address'), unique=True, blank=True, null=True)
     username = models.CharField(_('username'), max_length=30, unique=True)
     password = models.CharField(_('password'), max_length=128)
     school = models.ForeignKey(School, on_delete=models.CASCADE, null=True, blank=True, related_name='admin_user')
@@ -41,11 +41,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.email}'
-
+from django.http import JsonResponse
 @receiver(pre_save, sender=User)
 def check_school_uniqueness(sender, instance, **kwargs):
-    if instance.role == 'admin':
-        if User.objects.filter(school=instance.school, role='admin').exclude(id=instance.id).exists():
+    if instance.role == 'admin' and instance.school:
+        existing_admin = User.objects.filter(school=instance.school, role='admin').exclude(id=instance.id).first()
+        if existing_admin:
             raise ValidationError({"school": "This school already has an administrator."})
 
 

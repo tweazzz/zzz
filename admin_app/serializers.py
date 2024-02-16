@@ -123,7 +123,7 @@ class Sport_SuccessSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sport_Success
-        fields = ['id', 'fullname', 'photo', 'student_success', 'classl', 'school', 'class_id']
+        fields = ['id', 'fullname', 'photo', 'student_success', 'classl','class_id', 'school']
         read_only_fields = ['school']
 
     classl = serializers.SerializerMethodField()
@@ -142,6 +142,11 @@ class Sport_SuccessSerializer(serializers.ModelSerializer):
             except Class.DoesNotExist:
                 pass
         return sport_succes
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['class_id'] = instance.classl.id if instance.classl else None
+        return representation
 
 class Oner_SuccessSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(

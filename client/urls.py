@@ -1,12 +1,12 @@
 # client/urls.py
 from django.urls import path, include,re_path
 from djoser.views import TokenCreateView
-from auth_user.views import ClientUserCreateView,CustomTokenCreateView,CustomUserViewSet
+from auth_user.views import ClientUserCreateView,CustomTokenCreateView,ClientUserViewSet
 from rest_framework.routers import DefaultRouter
 from .views import *
 
 client_router = DefaultRouter()
-client_router.register(r'api/users', CustomUserViewSet, basename='client')
+client_router.register(r'api/users', ClientUserViewSet, basename='client')
 # client_router.register(r'api/school', SchoolsApi,basename='api-school')
 # client_router.register(r'api/classroom', ClassroomApi,basename='api-classroom')
 # client_router.register(r'api/teacher', TeacherApi,basename='api-teacher')

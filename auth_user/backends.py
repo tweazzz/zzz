@@ -15,10 +15,12 @@ class EmailOrUsernameModelBackend(ModelBackend):
         if user and user.check_password(password) and self.user_can_authenticate(user):
             print("Authentication successful")
             return user
-        else:
+        elif user:
             print("Authentication failed")
             print(f"Password from request: {username} {password}")
-            print(f"Password from database: {user.username} {user.password}")
+            print(f"User found: {user.username}")
+        else:
+            print("User not found")
 
     def user_can_authenticate(self, user):
         return user.is_active

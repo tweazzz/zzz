@@ -84,7 +84,7 @@ LOGGING = {
 
 # AUTH
 AUTH_USER_MODEL = 'auth_user.User'
-AUTHENTICATION_BACKENDS = ['auth_user.backends.EmailOrUsernameModelBackend', 'django.contrib.auth.backends.ModelBackend']
+AUTHENTICATION_BACKENDS = ['auth_user.backends.EmailOrUsernameModelBackend']
 
 
 REST_FRAMEWORK = {
