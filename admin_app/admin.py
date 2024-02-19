@@ -24,9 +24,9 @@ admin.site.register(Class)
 from django.contrib.auth.admin import UserAdmin
 
 class UsersAdmin(UserAdmin):
-    list_display = ('email', 'username','role','is_superuser')
-    list_display_links = ('email',)
-    search_fields = ('email', 'name', )
+    list_display = ('username', 'email','role','is_superuser')
+    list_display_links = ('username',)
+    search_fields = ('email', 'username', )
     readonly_fields = ('id', )
     ordering = ('id',)
     filter_horizontal = ()
@@ -35,7 +35,7 @@ class UsersAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2'),
+            'fields': ('username','email', 'password1', 'password2'),
         }),
     )
     list_filter = ('role',)
@@ -43,21 +43,13 @@ class UsersAdmin(UserAdmin):
 
 admin.site.register(User, UsersAdmin)
 
-class PhotoforNewsInlineForm(forms.ModelForm):
-    class Meta:
-        model = PhotoforNews
-        fields = '__all__'
+# class PhotoInline(admin.TabularInline):
+#     model = Photo
 
-class PhotoforNewsInline(admin.TabularInline):
-    model = PhotoforNews
-    form = PhotoforNewsInlineForm
-    extra = 1
+# class NewsAdmin(admin.ModelAdmin):
+#     inlines = [PhotoInline]
 
-class NewsAdmin(admin.ModelAdmin):
-    model = News
-    inlines = [PhotoforNewsInline]
-
-admin.site.register(News, NewsAdmin)
+# admin.site.register(News, NewsAdmin)
 
 
 admin.site.register(School)

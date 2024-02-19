@@ -1,6 +1,6 @@
 from django.db import models
 from colorfield.fields import ColorField
-
+from django.db.models.signals import pre_save
 import datetime
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -313,7 +313,7 @@ class News(models.Model):
         choices=SOCIAL_MEDIA_CHOICES,
         default=MANUAL,
     )
-    photos = models.ManyToManyField('PhotoforNews', related_name='news_photos', blank=True)
+    photos1 = models.ManyToManyField('Photo', related_name='news_photos', blank=True)
     qr_code = models.ImageField(blank=True, null=True, upload_to='news_qrcodes/')
 
     class Meta:
@@ -355,10 +355,12 @@ def delete_qr_code(sender, instance, **kwargs):
     if instance.qr_code:
         instance.qr_code.delete(False)  # Удаляем файл из хранилища
 
-class PhotoforNews(models.Model):
-    image = models.ImageField()
-    news = models.ForeignKey(News, on_delete=models.CASCADE, related_name='news_photos',null=True)
+class Photo(models.Model):
+    photos_of_news = models.ImageField(upload_to='photos/')
+    news = models.ForeignKey(News, on_delete=models.CASCADE, related_name='photos', default=None)
 
+    class Meta:
+        verbose_name_plural = 'Photos'
 
 class Subject(models.Model):
     full_name = models.CharField(max_length=250)
@@ -468,7 +470,7 @@ class School_SocialMedia(models.Model):
             self.account_name = self.get_instagram_url()
 
         super().save(*args, **kwargs)
-from django.db.models.signals import pre_save
+
 @receiver(pre_save, sender=School_SocialMedia)
 def generate_or_update_qr_code(sender, instance, **kwargs):
     # Генерируем или обновляем QR-код и сохраняем его в поле qr_code

@@ -123,7 +123,7 @@ class Sport_SuccessSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sport_Success
-        fields = ['id', 'fullname', 'photo', 'student_success', 'classl', 'school', 'class_id']
+        fields = ['id', 'fullname', 'photo', 'student_success', 'classl','class_id', 'school']
         read_only_fields = ['school']
 
     classl = serializers.SerializerMethodField()
@@ -142,6 +142,11 @@ class Sport_SuccessSerializer(serializers.ModelSerializer):
             except Class.DoesNotExist:
                 pass
         return sport_succes
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['class_id'] = instance.classl.id if instance.classl else None
+        return representation
 
 class Oner_SuccessSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(
@@ -681,13 +686,13 @@ class KruzhokWriteSerializer(serializers.ModelSerializer):
 
         return instance
 
-class PhotoforNewsSerializer(serializers.ModelSerializer):
+class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PhotoforNews
-        fields = ['image']
+        model = Photo
+        fields = ['id', 'image']
 
 class NewsSerializer(serializers.ModelSerializer):
-    photos = serializers.ListField(child=serializers.ImageField(), write_only=True, required=False)
+    photos = PhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = News
@@ -695,28 +700,21 @@ class NewsSerializer(serializers.ModelSerializer):
         read_only_fields = ['school','qr_code']
 
     def create(self, validated_data):
-        photos_data = validated_data.pop('photos', [])
-
-        for photo in photos_data:
-            if not photo.content_type.startswith('image'):
-                raise serializers.ValidationError("Файл не является изображением.")
-
+        photos_data = self.context.get('request').FILES.getlist('photos', [])
         news_instance = News.objects.create(**validated_data)
 
-        for photo in photos_data:
-            PhotoforNews.objects.create(news=news_instance, image=photo)
+        for photo_data in photos_data:
+            Photo.objects.create(news=news_instance, image=photo_data)
 
         return news_instance
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['photos'] = self.get_absolute_photo_urls(instance.photos.all())
-
         if instance.qr_code:
             representation['qr_code'] = self.get_absolute_url(instance.qr_code.url)
         else:
             del representation['qr_code']  # Если qr_code None, удаляем его из представления
-
         return representation
 
     def get_absolute_photo_urls(self, photos_queryset):

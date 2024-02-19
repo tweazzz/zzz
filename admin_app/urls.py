@@ -4,16 +4,16 @@ from rest_framework.routers import DefaultRouter
 from django.conf import settings
 from django.conf.urls.static import static
 from djoser.views import TokenCreateView
-from auth_user.views import AdminUserCreateView,CustomTokenCreateView,CustomUserViewSet
+from auth_user.views import AdminUserCreateView,CustomTokenCreateView,AdminUserViewSet,UserMeView
 
 
 admin_router = DefaultRouter()
 # router.register(r'api/admin', AdminsApi)
-admin_router.register(r'api/users', CustomUserViewSet, basename='admin')
+admin_router.register(r'api/users', AdminUserViewSet, basename='admin')
 admin_router.register(r'api/school', SchoolsApi)
 admin_router.register(r'api/classroom', ClassroomApi)
-admin_router.register(r'api/teacher', TeacherApi)
-admin_router.register(r'api/class', ClassApi)
+admin_router.register(r'api/teacher', TeacherApi,basename='teacher')
+admin_router.register(r'api/class', ClassApi, basename='class')
 admin_router.register(r'api/schedule', ScheduleApi)
 admin_router.register(r'api/menu', MenuApi)
 admin_router.register(r'api/slider', SliderApi)
@@ -22,7 +22,7 @@ admin_router.register(r'api/schoolpasport', schoolPasportApi)
 admin_router.register(r'api/school_administration', School_AdministrationApi)
 admin_router.register(r'api/school_director', School_DirectorApi)
 admin_router.register(r'api/extra_lesson', Extra_LessonsApi)
-admin_router.register(r'api/kruzhok', KruzhokListApi)
+admin_router.register(r'api/kruzhok', KruzhokListApi, basename='kruzhok')
 admin_router.register(r'api/Sport_SuccessApi', Sport_SuccessApi)
 admin_router.register(r'api/Oner_SuccessApi', Oner_SuccessApi)
 admin_router.register(r'api/PandikOlimpiadaApi', PandikOlimpiadaApi)
@@ -50,9 +50,9 @@ urlpatterns = [
     path('api/kruzhok/upload_photo/', KruzhokListApi.as_view({'post': 'upload_photo'}), name='upload_photo'),
     path('api/teacher/upload_photo/', TeacherApi.as_view({'post': 'upload_photo'}), name='upload_photo'),
     path('api/schoolpasport/upload_photo/', schoolPasportApi.as_view({'post': 'upload_photo'}), name='upload_photo'),
+    path('users/me/', UserMeView.as_view(), name='user-me'),
     path('get_posts_data/', GetPostsDataView.as_view(), name='get_posts_data'),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
