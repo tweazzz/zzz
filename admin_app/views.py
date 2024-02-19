@@ -28,6 +28,29 @@ class PhotoUploadMixin(viewsets.ModelViewSet):
         obj.save()
         serializer = self.get_serializer(obj)
         return Response(serializer.data)
+    
+import functools
+from django.db import connection
+import time   
+
+
+def query_debugger(func):
+    @functools.wraps(func)
+    def inner_func(*args, **kwargs):
+        start_queries = len(connection.queries)
+
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+
+        end_queries = len(connection.queries)
+
+        print(f"Function : {func.__name__}")
+        print(f"Number of Queries : {end_queries - start_queries}")
+        print(f"Finished in : {(end - start):.2f}s")
+        return result
+
+    return inner_func
 
 class SchoolsApi(viewsets.ModelViewSet):
     queryset = School.objects.all()
@@ -36,14 +59,17 @@ class SchoolsApi(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = SchoolFilter
 
+    @query_debugger
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def available_school(self, request, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            if self.request.user.is_superuser:
-                school = School.objects.all()
-            else:
-                school = School.objects.none()
-
+        if self.request.user.is_superuser:
+            school = (
+                self.queryset.values('id','school_kz_name')
+            )
+            # school = self.queryset.all()
             serializer = AvailableSchoolSerializer(school, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
@@ -80,7 +106,6 @@ class ClassroomApi(viewsets.ModelViewSet):
             return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
 class ClassApi(viewsets.ModelViewSet):
-    queryset = Class.objects.all()
     serializer_class = ClassSerializer
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
@@ -91,9 +116,12 @@ class ClassApi(viewsets.ModelViewSet):
             serializer.save(school=self.request.user.school)
 
     def get_queryset(self):
+        queryset = Class.objects.all()
         if self.request.user.is_authenticated:
-            return Class.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Class.objects.all()
-        return Class.objects.all()
+            if not self.request.user.is_superuser:
+                queryset = queryset.filter(school=self.request.user.school)
+            queryset = queryset.select_related('school', 'classroom', 'class_teacher')
+        return queryset
 
 class ScheduleApi(viewsets.ModelViewSet):
     queryset = Schedule.objects.all()
@@ -146,7 +174,6 @@ class MenuApi(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = MenuFilter
-
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -436,10 +463,10 @@ class RingApi(viewsets.ModelViewSet):
 
 
 
+from django.db.models import Prefetch
 class TeacherApi(PhotoUploadMixin, viewsets.ModelViewSet):
     model = Teacher
     photo_field = 'photo3x4'
-    queryset = Teacher.objects.all()
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = TeacherFilter
@@ -458,9 +485,13 @@ class TeacherApi(PhotoUploadMixin, viewsets.ModelViewSet):
         serializer.save()
 
     def get_queryset(self):
+        queryset = Teacher.objects.all()
         if self.request.user.is_authenticated:
-            return Teacher.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Teacher.objects.all()
-        return Teacher.objects.all()
+            queryset = queryset.filter(school=self.request.user.school) if not self.request.user.is_superuser else queryset
+        return queryset.select_related('school').prefetch_related(
+            Prefetch('jobhistory_set', queryset=JobHistory.objects.all()),
+            Prefetch('specialityhistory_set', queryset=SpecialityHistory.objects.all())
+        )
 
 class TeacherWorkloadApi(viewsets.ModelViewSet):
     queryset = TeacherWorkload.objects.all()
@@ -478,13 +509,12 @@ class TeacherWorkloadApi(viewsets.ModelViewSet):
 class KruzhokListApi(PhotoUploadMixin, viewsets.ModelViewSet):
     model = Kruzhok
     photo_field = 'photo'
-    queryset = Kruzhok.objects.all()
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
     filterset_class = KruzhokFilter
 
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve','upload_photo']:
+        if self.action in ['list', 'retrieve', 'upload_photo']:
             return KruzhokReadSerializer
         elif self.action in ['create', 'update', 'partial_update']:
             return KruzhokWriteSerializer
@@ -495,9 +525,12 @@ class KruzhokListApi(PhotoUploadMixin, viewsets.ModelViewSet):
             serializer.save(school=self.request.user.school)
 
     def get_queryset(self):
+        queryset = Kruzhok.objects.all()
         if self.request.user.is_authenticated:
-            return Kruzhok.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Kruzhok.objects.all()
-        return Kruzhok.objects.all()
+            if not self.request.user.is_superuser:
+                queryset = queryset.filter(school=self.request.user.school)
+            queryset = queryset.select_related('teacher').prefetch_related('lessons')
+        return queryset
 
     @action(detail=False, methods=['get'])
     def available_teachers(self, request, *args, **kwargs):
@@ -507,11 +540,7 @@ class KruzhokListApi(PhotoUploadMixin, viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        lessons = instance.lessons.all()
-        for lesson in lessons:
-            lesson.delete()
-        self.perform_destroy(instance)
-
+        instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class DopUrokApi(viewsets.ModelViewSet):
@@ -558,10 +587,18 @@ class NewsApi(viewsets.ModelViewSet):
         if self.request.user.is_authenticated:
             serializer.save(school=self.request.user.school)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(school=self.request.user.school)
+        serializer.save()  # Вызываем метод create() сериализатора
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     def get_queryset(self):
         if self.request.user.is_authenticated:
             return News.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else News.objects.all()
         return News.objects.all()
+
     
 class NotificationsApi(viewsets.ModelViewSet):
     queryset = Notifications.objects.all()

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'djoser',
     'django_db_logger',
+    "debug_toolbar"
 ]
 
 LOGGING = {
@@ -123,6 +124,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -191,6 +193,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+INTERNAL_IPS = [
+    # ...
+    "127.0.0.1",
+    # ...
+]
 STATIC_ROOT = '/kestesikz/static'
 import os
 MEDIA_URL = '/media/'

@@ -60,7 +60,7 @@ urlpatterns = [
     path('api/ringApi/', RingApi.as_view(), name='api-ringApi'),
     path('api/DopUrokApi/', DopUrokApi.as_view(), name='api-DopUrokApi'),
     path('api/DopUrokRingApi/', DopUrokRingApi.as_view(), name='api-DopUrokRingApi'),
-    path('api/newsApi/', NewsApi.as_view(), name='api-NewsApi'),
+    # path('api/newsApi/', NewsApi.as_view(), name='api-NewsApi'),
     path('api/notification/', NotificationsApi.as_view(), name='api-notification'),
     path('api/schoolmap/', SchoolMapApi.as_view(), name='api-schoolmap')
 ]

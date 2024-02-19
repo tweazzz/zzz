@@ -33,11 +33,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Users'
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.school and not self.school.user_id:
-            self.school.user_id = self.id
-            self.school.save()
-            print(f"School's user_id set to {self.id}")
+        if self.role == 'admin':  # Проверяем, является ли пользователь администратором
+            super().save(*args, **kwargs)
+            if self.school:
+                self.school.user_id = self.id
+                self.school.save()
+                print(f"School's user_id set to {self.id}")
+        else:
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.email}'

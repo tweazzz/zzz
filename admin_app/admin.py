@@ -43,21 +43,13 @@ class UsersAdmin(UserAdmin):
 
 admin.site.register(User, UsersAdmin)
 
-class PhotoforNewsInlineForm(forms.ModelForm):
-    class Meta:
-        model = PhotoforNews
-        fields = '__all__'
+# class PhotoInline(admin.TabularInline):
+#     model = Photo
 
-class PhotoforNewsInline(admin.TabularInline):
-    model = PhotoforNews
-    form = PhotoforNewsInlineForm
-    extra = 1
+# class NewsAdmin(admin.ModelAdmin):
+#     inlines = [PhotoInline]
 
-class NewsAdmin(admin.ModelAdmin):
-    model = News
-    inlines = [PhotoforNewsInline]
-
-admin.site.register(News, NewsAdmin)
+# admin.site.register(News, NewsAdmin)
 
 
 admin.site.register(School)
