@@ -33,7 +33,6 @@ client_router.register(r'api/users', ClientUserViewSet, basename='client')
 # client_router.register(r'api/notification', NotificationsApi,basename='api-notification')
 # client_router.register(r'api/schoolmap', SchoolMapApi,basename='api-schoolmap')
 
-
 urlpatterns = [
     path('', include(client_router.urls)),
     path('login/', CustomTokenCreateView.as_view(), name='client_token_create'),
@@ -60,7 +59,7 @@ urlpatterns = [
     path('api/ringApi/', RingApi.as_view(), name='api-ringApi'),
     path('api/DopUrokApi/', DopUrokApi.as_view(), name='api-DopUrokApi'),
     path('api/DopUrokRingApi/', DopUrokRingApi.as_view(), name='api-DopUrokRingApi'),
-    # path('api/newsApi/', NewsApi.as_view(), name='api-NewsApi'),
+    path('api/newsApi/', NewsApi.as_view(), name='api-NewsApi'),
     path('api/notification/', NotificationsApi.as_view(), name='api-notification'),
     path('api/schoolmap/', SchoolMapApi.as_view(), name='api-schoolmap')
 ]

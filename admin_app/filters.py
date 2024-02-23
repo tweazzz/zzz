@@ -12,13 +12,13 @@ class NewsFilter(filters.FilterSet):
     class Meta:
         model = News
         fields = '__all__'
-        exclude = ['photos','qr_code']
+        exclude = ['img1','img2','img3','img4','img5','img6','img7','img8','img9','img10','qr_code']
 
 class SchoolFilter(filters.FilterSet):
     class Meta:
         model = School
         fields = '__all__'
-        exclude = ['logo']
+        exclude = ['logo','user']
 
 class ClassFilter(filters.FilterSet):
     class Meta:
@@ -29,7 +29,7 @@ class ClassroomFilter(filters.FilterSet):
     class Meta:
         model = Classrooms
         fields = '__all__'
-
+    
 class SubjectFilter(filters.FilterSet):
     class Meta:
         model = Subject
@@ -149,4 +149,9 @@ class AvailableClassesFilter(filters.FilterSet):
 class AvailableRingFilter(filters.FilterSet):
     class Meta:
         model = Ring
+        fields = ['id','start_time','end_time']
+
+class AvailableDopUrokRingFilter(filters.FilterSet):
+    class Meta:
+        model = DopUrokRing
         fields = ['id','start_time','end_time']

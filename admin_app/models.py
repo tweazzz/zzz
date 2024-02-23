@@ -78,32 +78,23 @@ class Teacher(models.Model):
     photo3x4 = models.ImageField(null=True, blank=True)
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
     subject = models.CharField(max_length=250, null=True)
-    pedagog_sheber = 'Pedagog Sheber'
-    pedagog_zertteushy = 'Pedagog  Zertteushy'
-    pedagog_sarapshy = 'Pedagog Sarapshy'
-    pedagog_moderator = 'Pedagog Moderator'
-    pedagog = 'Pedagog'
-    pedagog_stazher = 'Pedagog  Stazher'
-    pedagog_zhogary = 'Pedagog  Zhogary'
-    pedagog1sanat = 'Pedagog  1 sanat'
-    pedagog2sanat = 'Pedagog  2 sanat'
-    pedagog_sanat_zhok = 'Pedagog sanat zhok'
-    pedagog_choices = [
-        (pedagog_sheber, 'Pedagog Sheber'),
-        (pedagog_zertteushy, 'Pedagog  Zertteushy'),
-        (pedagog_sarapshy, 'Pedagog Sarapshy'),
-        (pedagog_moderator, 'Pedagog Moderator'),
-        (pedagog, 'Pedagog'),
-        (pedagog_stazher, 'Pedagog  Stazher'),
-        (pedagog_zhogary, 'Pedagog  Zhogary'),
-        (pedagog1sanat, 'Pedagog  1 sanat'),
-        (pedagog2sanat, 'Pedagog  2 sanat'),
-        (pedagog_sanat_zhok, 'Pedagog sanat zhok'),
+    PEDAGOG_CHOICES = [
+        ('pedagog_sheber', 'Pedagog Sheber'),
+        ('pedagog_zertteushy', 'Pedagog  Zertteushy'),
+        ('pedagog_sarapshy', 'Pedagog Sarapshy'),
+        ('pedagog_moderator', 'Pedagog Moderator'),
+        ('pedagog', 'Pedagog'),
+        ('pedagog_stazher', 'Pedagog  Stazher'),
+        ('pedagog_zhogary', 'Pedagog  Zhogary'),
+        ('pedagog1sanat', 'Pedagog  1 sanat'),
+        ('pedagog2sanat', 'Pedagog  2 sanat'),
+        ('pedagog_sanat_zhok', 'Pedagog sanat zhok'),
     ]
     pedagog = models.CharField(
-        max_length=20,
-        choices=pedagog_choices,
-        default=pedagog_sheber,
+        max_length=200,
+        choices=PEDAGOG_CHOICES,
+        null=True, blank=True,
+        default='pedagog'
     )
 
     class Meta:
@@ -116,7 +107,7 @@ class Class(models.Model):
     class_name = models.CharField(max_length=150)
     class_number = models.CharField(max_length=255, editable=False, null=True, blank=True)
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
-    classroom = models.ForeignKey('Classrooms', on_delete=models.CASCADE, null=True)
+    classroom = models.ForeignKey('Classrooms', on_delete=models.CASCADE, null=True,blank=True)
     class_teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True, related_name='class_teacher')
     KZ = 'KZ'
     RU = 'RU'
@@ -127,7 +118,7 @@ class Class(models.Model):
     language = models.CharField(
         max_length=20,
         choices=lang_choices,
-        default=KZ,
+        null=True, blank=True
     )
     osnova_plan = models.PositiveIntegerField(choices=[(i, i) for i in range(1, 20)],null=True)
     osnova_smena = models.PositiveIntegerField(choices=[(i, i) for i in range(1, 5)],null=True)
@@ -305,15 +296,24 @@ class News(models.Model):
         (FACEBOOK, 'Facebook'),
         (MANUAL, 'Manual'),
     ]
-    date = models.DateField()
-    text = models.TextField()
+    date = models.DateField(null=True, blank=True)
+    text = models.TextField(null=True, blank=True)
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='news')
     type = models.CharField(
         max_length=10,
         choices=SOCIAL_MEDIA_CHOICES,
         default=MANUAL,
     )
-    photos1 = models.ManyToManyField('Photo', related_name='news_photos', blank=True)
+    img1 = models.ImageField(null=True, blank=True)
+    img2 = models.ImageField(null=True, blank=True)
+    img3 = models.ImageField(null=True, blank=True)
+    img4 = models.ImageField(null=True, blank=True)
+    img5 = models.ImageField(null=True, blank=True)
+    img6 = models.ImageField(null=True, blank=True)
+    img7 = models.ImageField(null=True, blank=True)
+    img8 = models.ImageField(null=True, blank=True)
+    img9 = models.ImageField(null=True, blank=True)
+    img10 = models.ImageField(null=True, blank=True)
     qr_code = models.ImageField(blank=True, null=True, upload_to='news_qrcodes/')
 
     class Meta:
@@ -355,12 +355,7 @@ def delete_qr_code(sender, instance, **kwargs):
     if instance.qr_code:
         instance.qr_code.delete(False)  # Удаляем файл из хранилища
 
-class Photo(models.Model):
-    photos_of_news = models.ImageField(upload_to='photos/')
-    news = models.ForeignKey(News, on_delete=models.CASCADE, related_name='photos', default=None)
 
-    class Meta:
-        verbose_name_plural = 'Photos'
 
 class Subject(models.Model):
     full_name = models.CharField(max_length=250)
@@ -374,8 +369,7 @@ class Subject(models.Model):
     ]
     type = models.CharField(
         max_length=20,
-        choices=type_choices,
-        default=EASY,
+        choices=type_choices,null=True,blank=True
     )
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
 
@@ -435,16 +429,16 @@ class School_SocialMedia(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
     INSTAGRAM = 'instagram'
     FACEBOOK = 'facebook'
-    youtube = 'Youtube'
+    YOUTUBE = 'Youtube'
     SOCIAL_MEDIA_CHOICES = [
         (INSTAGRAM, 'Instagram'),
         (FACEBOOK, 'Facebook'),
-        (youtube, 'Youtube'),
+        (YOUTUBE, 'Youtube'),
     ]
     type = models.CharField(
         max_length=10,
         choices=SOCIAL_MEDIA_CHOICES,
-        default=youtube,
+        default=YOUTUBE,
     )
     account_name = models.CharField(max_length=250)
     qr_code = models.ImageField(blank=True, null=True, upload_to='social_media_qrcodes/')
@@ -456,52 +450,67 @@ class School_SocialMedia(models.Model):
     def __str__(self):
         return f'{self.school} Social Media {self.type}'
     
-    def get_instagram_url(self):
+    def get_social_media_url(self):
         if self.type == self.INSTAGRAM:
-            # Убедимся, что self.account_name не содержит уже добавленный URL Instagram
+            # Генерируем URL Instagram
             if not self.account_name.startswith("https://www.instagram.com/"):
                 return f"https://www.instagram.com/{self.account_name}/"
             return self.account_name
+        
+        if self.type == self.FACEBOOK:
+            # Генерируем URL Facebook
+            if not self.account_name.startswith("https://facebook.com/"):
+                return f"https://facebook.com/mrbeast/{self.account_name}/"
+            return None  # Для Facebook нет специального URL
+
+        elif self.type == self.YOUTUBE:
+            # Генерируем URL YouTube
+            if not self.account_name.startswith("https://www.youtube.com/"):
+                return f"https://www.youtube.com/{self.account_name}/"
+            return None  # Для YouTube нет специального URL
+
         return None
 
     def save(self, *args, **kwargs):
         # Если тип социальной сети - Instagram, сохраняем URL в поле account_name
         if self.type == self.INSTAGRAM:
-            self.account_name = self.get_instagram_url()
+            self.account_name = self.get_social_media_url()
+        if self.type == self.FACEBOOK:
+            self.account_name = self.get_social_media_url()
+        if self.type == self.YOUTUBE:
+            self.account_name = self.get_social_media_url()
 
         super().save(*args, **kwargs)
 
 @receiver(pre_save, sender=School_SocialMedia)
 def generate_or_update_qr_code(sender, instance, **kwargs):
     # Генерируем или обновляем QR-код и сохраняем его в поле qr_code
-    if instance.type == instance.INSTAGRAM:
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
 
-        # Используем URL Instagram при создании QR-кода
-        url = instance.get_instagram_url()
-        qr.add_data(url)
-        qr.make(fit=True)
+    # Используем URL социальной медиа при создании QR-кода
+    url = instance.get_social_media_url()
+    qr.add_data(url)
+    qr.make(fit=True)
 
-        img = qr.make_image(fill_color="black", back_color="white")
-        buffer = BytesIO()
-        img.save(buffer)
-        filename = f'qr_code.png'
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer)
+    filename = f'qr_code.png'
 
-        # Если у объекта уже есть QR-код, удалим его перед сохранением нового
-        if instance.qr_code:
-            instance.qr_code.delete(False)
+    # Если у объекта уже есть QR-код, удалим его перед сохранением нового
+    if instance.qr_code:
+        instance.qr_code.delete(False)
 
-        instance.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+    instance.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
 
 @receiver(pre_delete, sender=School_SocialMedia)
 def delete_qr_code(sender, instance, **kwargs):
     # Удаляем QR-код при удалении социальной медиа
-    print("Deleting QR code for", instance)
     if instance.qr_code:
         instance.qr_code.delete(False)
 
@@ -630,8 +639,8 @@ class Extra_Lessons(models.Model):
 
 class JobHistory(models.Model):
     teacher = models.ForeignKey('Teacher', on_delete=models.CASCADE, null=False)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.CharField(max_length=4)
+    end_date = models.CharField(max_length=4)
     job_characteristic = models.TextField()
 
     class Meta:
@@ -643,21 +652,21 @@ class JobHistory(models.Model):
 
 class SpecialityHistory(models.Model):
     teacher = models.ForeignKey('Teacher', on_delete=models.CASCADE, null=False)
-    end_date = models.DateField()
+    end_date = models.CharField(max_length=4)
     speciality_university = models.TextField()
-    srednee = "Среднее"
-    Viswee = "Высшее"
-    degree_choices= [
-        (srednee, "Среднее"),
-        (Viswee, "Высшее"),
+    DEGREE_CHOICES = [
+        ('bakalavr', 'Бакалавр'),
+        ('magistratura', 'Магистратура'),
+        ('doktorantura', 'Докторантура'),
+        ('srednee', 'Cреднее'),
+        ('viswee', 'Высшее'),
     ]
-    mamandygy = models.CharField(max_length=150, null=True)
+    mamandygy = models.CharField(max_length=100,null=True,blank=True)
     degree = models.CharField(
-        max_length=20,
-        choices=degree_choices,
-        default=Viswee,
+        max_length=200,
+        choices=DEGREE_CHOICES,
+        default='bakalavr'
     )
-
 
     class Meta:
         verbose_name_plural = "Speciality History"

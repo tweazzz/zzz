@@ -32,7 +32,7 @@ admin_router.register(r'api/School_SocialMediaApi', School_SocialMediaApi)
 admin_router.register(r'api/ringApi', RingApi)
 admin_router.register(r'api/DopUrokApi', DopUrokApi)
 admin_router.register(r'api/DopUrokRingApi', DopUrokRingApi)
-admin_router.register(r'api/newsApi', NewsApi)
+admin_router.register(r'api/newsApi', NewsApi, basename='news')
 admin_router.register(r'api/notification', NotificationsApi)
 admin_router.register(r'api/schoolmap', SchoolMapApi)
 
@@ -45,6 +45,7 @@ urlpatterns = [
     path('api/available_classes/', Sport_SuccessApi.as_view({'get': 'available_classes'}), name='available_classes'),
     path('api/available_classrooms/', ClassroomApi.as_view({'get': 'available_classrooms'}), name='available_classrooms'),
     path('api/available_ring/', ScheduleApi.as_view({'get': 'available_ring'}), name='available-ring'),
+    path('api/available_dopurok_ring/', ScheduleApi.as_view({'get': 'available_dopurok_ring'}), name='available_dopurok_ring-ring'),
     path('api/available_subject/', ScheduleApi.as_view({'get': 'available_subject'}), name='available-subject'),
     path('api/available_typez/', Extra_LessonsApi.as_view({'get': 'available_typez'}), name='available-typez'),
     path('api/kruzhok/upload_photo/', KruzhokListApi.as_view({'post': 'upload_photo'}), name='upload_photo'),

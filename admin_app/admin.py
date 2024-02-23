@@ -43,13 +43,9 @@ class UsersAdmin(UserAdmin):
 
 admin.site.register(User, UsersAdmin)
 
-# class PhotoInline(admin.TabularInline):
-#     model = Photo
 
-# class NewsAdmin(admin.ModelAdmin):
-#     inlines = [PhotoInline]
 
-# admin.site.register(News, NewsAdmin)
+admin.site.register(News)
 
 
 admin.site.register(School)

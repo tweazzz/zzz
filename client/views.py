@@ -306,17 +306,17 @@ class DopUrokRingApi(generics.ListAPIView):
             return DopUrokRing.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else DopUrokRing.objects.all()
         return DopUrokRing.objects.all()
 
-# class NewsApi(generics.ListAPIView):
-#     queryset = News.objects.all()
-#     serializer_class = NewsSerializer
-#     permission_classes = [IsClient]
-#     filter_backends = [DjangoFilterBackend]
-#     filterset_class = NewsFilter
+class NewsApi(generics.ListAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [IsClient]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NewsFilter
 
-#     def get_queryset(self):
-#         if self.request.user.is_authenticated and self.request.user.role == 'client':
-#             return News.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else News.objects.all()
-#         return News.objects.all()
+    def get_queryset(self):
+        if self.request.user.is_authenticated and self.request.user.role == 'client':
+            return News.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else News.objects.all()
+        return News.objects.all()
     
 class NotificationsApi(generics.ListAPIView):
     queryset = Notifications.objects.all()
