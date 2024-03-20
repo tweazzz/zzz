@@ -20,30 +20,6 @@ class ClassroomSerializer(serializers.ModelSerializer):
         fields = ['id','classroom_name', 'classroom_number', 'flat', 'korpus','school']
         read_only_fields = ['school']
 
-
-# class ClassSerializer(serializers.ModelSerializer):
-#     classroom = AvailableClassRoomSerializer(required=False, allow_null=True)
-#     class_teacher = AvailableTeacherSerializer(required=False, allow_null=True)
-
-#     class Meta:
-#         model = Class
-#         fields = ['id', 'class_name', 'class_number', 'language', 'classroom', 'class_teacher', 'osnova_plan', 'osnova_smena', 'dopurok_plan', 'dopurok_smena', 'school']
-#         read_only_fields = ['school']
-
-#     def to_representation(self, instance):
-#         representation = super().to_representation(instance)
-
-#         # Проверяем наличие classroom_id и преобразуем в соответствующий объект или None
-#         representation['classroom'] = (AvailableClassRoomSerializer(instance.classroom).data 
-#                                         if instance.classroom_id is not None else None)
-
-#         # Проверяем наличие class_teacher_id и преобразуем в соответствующий объект или None
-#         representation['class_teacher'] = (AvailableTeacherSerializer(instance.class_teacher).data 
-#                                             if instance.class_teacher_id is not None else None)
-
-#         return representation
-
-
 class RingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ring
@@ -271,6 +247,27 @@ class Extra_LessonSerializer(serializers.ModelSerializer):
         fields = ['id','type_full_name','type_color','school']
         read_only_fields = ['school']
 
+class ClassSerializer(serializers.ModelSerializer):
+    classroom = AvailableClassRoomSerializer(required=False, allow_null=True)
+    class_teacher = AvailableTeacherSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Class
+        fields = ['id', 'class_name', 'class_number', 'language', 'classroom', 'class_teacher', 'osnova_plan', 'osnova_smena', 'dopurok_plan', 'dopurok_smena', 'school']
+        read_only_fields = ['school']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # Проверяем наличие classroom_id и преобразуем в соответствующий объект или None
+        representation['classroom'] = (AvailableClassRoomSerializer(instance.classroom).data 
+                                        if instance.classroom_id is not None else None)
+
+        # Проверяем наличие class_teacher_id и преобразуем в соответствующий объект или None
+        representation['class_teacher'] = (AvailableTeacherSerializer(instance.class_teacher).data 
+                                            if instance.class_teacher_id is not None else None)
+
+        return representation
 
 class DopUrokSerializer(serializers.ModelSerializer):
     class Meta:
@@ -285,7 +282,7 @@ class DopUrokSerializer(serializers.ModelSerializer):
         allow_null=True  # Разрешаем null значения
     )
     ring = serializers.PrimaryKeyRelatedField(
-        queryset=Ring.objects.all(),
+        queryset=DopUrokRing.objects.all(),
         write_only=True,
         required=False,
         allow_null=True  # Разрешаем null значения
@@ -405,8 +402,8 @@ class DopUrokSerializer(serializers.ModelSerializer):
         ring_id = representation.get('ring_id')
         if ring_id is not None:
             try:
-                ring_instance = Ring.objects.get(id=ring_id)
-                representation['ring'] = AvailableRingSerializer(ring_instance).data
+                ring_instance = DopUrokRing.objects.get(id=ring_id)
+                representation['ring'] = AvailableDopUrokRingSerializer(ring_instance).data
             except Ring.DoesNotExist:
                 pass
         else:
@@ -502,8 +499,6 @@ class DopUrokSerializer(serializers.ModelSerializer):
 
         return representation
  
-
-
 class DopUrokRingSerializer(serializers.ModelSerializer):
     class Meta:
         model = DopUrokRing
@@ -720,6 +715,7 @@ class NewsSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # Обновляем текст и тип новости
+        instance.date = validated_data.get('date', instance.date)
         instance.text = validated_data.get('text', instance.text)
         instance.type = validated_data.get('type', instance.type)
 
@@ -985,7 +981,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
         return representation
  
 class NotificationsSerializer(serializers.ModelSerializer):
-    created_at = serializers.DateTimeField(format="%Y-%m-%d, %H:%M")
+    # created_at = serializers.DateTimeField(format="%Y-%m-%d, %H:%M")
 
     class Meta:
         model = Notifications
@@ -995,3 +991,4 @@ class SchoolMapSerializer(serializers.ModelSerializer):
     class Meta:
         model = SchoolMap
         fields = '__all__'
+

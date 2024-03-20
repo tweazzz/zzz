@@ -30,7 +30,7 @@ class PhotoUploadMixin(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class SchoolsApi(viewsets.ModelViewSet):
-    queryset = School.objects.select_related('user')
+    queryset = School.objects.select_related('user').order_by('id')
     serializer_class = SchoolSerializer
     permission_classes = [IsSuperAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
@@ -39,7 +39,7 @@ class SchoolsApi(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def available_school(self, request, *args, **kwargs):
         if self.request.user.is_superuser:
-            school = School.objects.select_related('user')
+            school = School.objects.select_related('user').order_by('id')
             serializer = AvailableSchoolSerializer(school, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
@@ -100,7 +100,7 @@ class ClassApi(viewsets.ModelViewSet):
             if self.request.user.is_superuser:
                 classes = Class.objects.all().select_related('school', 'classroom', 'class_teacher')
             else:
-                classes = self.queryset
+                classes = Class.objects.filter(school=self.request.user.school)
 
             classes_filter = AvailableClassesFilter(request.GET, queryset=classes)
             serializer = AvailableClassesSerializer(classes_filter.qs, many=True)
@@ -422,7 +422,7 @@ class RingApi(viewsets.ModelViewSet):
         return Ring.objects.all().select_related('school')
 
 
-
+from django.db.models import Prefetch
 class TeacherApi(PhotoUploadMixin, viewsets.ModelViewSet):
     model = Teacher
     photo_field = 'photo3x4'
@@ -445,10 +445,17 @@ class TeacherApi(PhotoUploadMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Teacher.objects.all()
+        
+        # Оптимизация выборки данных из связанных таблиц
+        queryset = queryset.select_related('school').prefetch_related(
+            Prefetch('jobhistory_set', queryset=JobHistory.objects.select_related('teacher')),
+            Prefetch('specialityhistory_set', queryset=SpecialityHistory.objects.select_related('teacher'))
+        )
+        
+        # Оптимизация фильтрации данных
         if self.request.user.is_authenticated:
             queryset = queryset.filter(school=self.request.user.school) if not self.request.user.is_superuser else queryset
 
-        queryset = queryset.select_related('school').prefetch_related('jobhistory_set', 'specialityhistory_set')
         return queryset
 
 class TeacherWorkloadApi(viewsets.ModelViewSet):

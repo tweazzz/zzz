@@ -4,6 +4,7 @@ from djoser.views import TokenCreateView
 from auth_user.views import ClientUserCreateView,CustomTokenCreateView,ClientUserViewSet
 from rest_framework.routers import DefaultRouter
 from .views import *
+from auth_user.views import CustomTokenCreateView,UserMeView
 
 client_router = DefaultRouter()
 client_router.register(r'api/users', ClientUserViewSet, basename='client')
@@ -37,7 +38,8 @@ urlpatterns = [
     path('', include(client_router.urls)),
     path('login/', CustomTokenCreateView.as_view(), name='client_token_create'),
     path('register/', ClientUserCreateView.as_view(), name='client_user_create'),
-    path('api/school', SchoolsApi.as_view(), name='api-school'),
+    path('users/me/', UserMeView.as_view(), name='user-me'),
+    path('api/school/', SchoolsApi.as_view(), name='api-school'),
     path('api/classroom/', ClassroomApi.as_view(), name='api-classroom'),
     path('api/teacher/', TeacherApi.as_view(), name='api-teacher'),
     path('api/class/', ClassApi.as_view(), name='api-class'),

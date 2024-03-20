@@ -71,7 +71,7 @@ class ClientUserCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         mutable_data = request.data.copy()
-        mutable_data['role'] = 'client'
+        mutable_data['role'] = 'student'
         serializer = self.get_serializer(data=mutable_data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -117,7 +117,7 @@ def send_reset_code(request):
 
         try:
             # Поиск пользователя по phone_number
-            user = User.objects.get(email=email, role='client')
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -218,7 +218,7 @@ def send_verification_code(request):
 
         try:
             # Поиск пользователя по phone_number
-            user = User.objects.get(email=email, role='client')
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
 

@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'auth_user',
     'admin_app',
     'client',
+    'autogenerate',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

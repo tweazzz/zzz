@@ -249,11 +249,17 @@ class TeacherApi(generics.ListAPIView):
     permission_classes = [IsClient]
     filter_backends = [DjangoFilterBackend]
     filterset_class = TeacherFilter
+    serializer_class = TeacherReadSerializer
 
     def get_queryset(self):
-        if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Teacher.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Teacher.objects.all()
-        return Teacher.objects.all()
+        queryset = Teacher.objects.all()
+        if self.request.user.is_authenticated:
+            if self.request.user.role == 'client':
+                queryset = queryset.filter(school=self.request.user.school)
+            elif self.request.user.is_superuser:
+                queryset = queryset.select_related('school')
+        return queryset.prefetch_related('jobhistory_set', 'specialityhistory_set')
+    
 
 class TeacherWorkloadApi(generics.ListAPIView):
     queryset = TeacherWorkload.objects.all()

@@ -4,8 +4,11 @@ class IsClient(permissions.BasePermission):
     def has_permission(self, request, view):
         # Проверяем, авторизован ли пользователь
         if request.user and request.user.is_authenticated:
+            # Проверяем, является ли пользователь суперадмином
+            if request.user.is_superuser:
+                return True  # Разрешаем все методы для суперадмина
             # Проверяем, является ли роль пользователя клиентом
-            if request.user.role == 'client':
+            if request.user.role != 'admin':
                 # Разрешаем доступ для безопасных методов (GET, HEAD, OPTIONS)
                 return request.method in permissions.SAFE_METHODS
         return False

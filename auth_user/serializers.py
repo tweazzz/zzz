@@ -21,6 +21,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'school': {'read_only': True},
             'role': {'read_only': True},
+            'username': {'required': False}
         }
 
     def validate(self, data):
@@ -84,6 +85,7 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         user = super().create(validated_data)
         user.role = validated_data.get('role', '')
         user.school = validated_data.get('school', None)
+        user.is_active = True if validated_data.get('role') == 'admin' else False
         user.save()
         return user
 
@@ -120,8 +122,8 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
 
         if self.user and self.user.is_active:
             request_path = self.context.get("request").path
-            if 'client' in request_path and self.user.role != 'client':
-                raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})
+            if 'client' in request_path and self.user.role != 'admin':
+                return attrs
             elif 'admin' in request_path and (self.user.role != 'admin' and not self.user.is_superuser):
                 raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})
             return attrs

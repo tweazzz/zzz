@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from djoser.views import TokenCreateView
 from auth_user.views import AdminUserCreateView,CustomTokenCreateView,AdminUserViewSet,UserMeView
+from autogenerate.views import AutoSchedulerView
 
 
 admin_router = DefaultRouter()
@@ -42,7 +43,7 @@ urlpatterns = [
     path('register/', AdminUserCreateView.as_view(), name='admin_create'),
     path('api/available_school/', SchoolsApi.as_view({'get': 'available_school'}), name='available-school'),
     path('api/available_teachers/', KruzhokListApi.as_view({'get': 'available_teachers'}), name='available_teachers'),
-    path('api/available_classes/', Sport_SuccessApi.as_view({'get': 'available_classes'}), name='available_classes'),
+    path('api/available_classes/', ClassApi.as_view({'get': 'available_classes'}), name='available_classes'),
     path('api/available_classrooms/', ClassroomApi.as_view({'get': 'available_classrooms'}), name='available_classrooms'),
     path('api/available_ring/', ScheduleApi.as_view({'get': 'available_ring'}), name='available-ring'),
     path('api/available_dopurok_ring/', ScheduleApi.as_view({'get': 'available_dopurok_ring'}), name='available_dopurok_ring-ring'),
@@ -53,6 +54,7 @@ urlpatterns = [
     path('api/schoolpasport/upload_photo/', schoolPasportApi.as_view({'post': 'upload_photo'}), name='upload_photo'),
     path('users/me/', UserMeView.as_view(), name='user-me'),
     path('get_posts_data/', GetPostsDataView.as_view(), name='get_posts_data'),
+    path('auto_schedule/', AutoSchedulerView.as_view(), name='auto-schedule'),
 ]
 
 if settings.DEBUG:
