@@ -95,7 +95,9 @@ class UserMeView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        print(f"User object: {user}")
+        return user
 
     def retrieve(self, request, *args, **kwargs):
         serializer = self.get_serializer(request.user)

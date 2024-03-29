@@ -16,7 +16,7 @@ class AutoSchedulerView(APIView):
     """
 
     serializer_class = serializers.AutoScheduleSerializer
-    permission_classes = [permissions.IsAdminUser]
+    # permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, *args, **kwargs):
         """
@@ -64,7 +64,16 @@ class AutoSchedulerView(APIView):
                     subject=subject,
                 ):
                     continue
+                
 
+                teacher_schedule = models.ClassSubject.objects.filter(
+                    week_day=week_day,
+                    class_hour=class_hour,
+                    schedule__teacher=teacher
+                )
+                if teacher_schedule.exists():
+                    continue 
+                
                 teacher_class_subjects = models.ClassSubject.objects.filter(
                     schedule__teacher__school=teacher.school,
                     schedule__school_class=school_class.id,
@@ -125,7 +134,8 @@ class AutoSchedulerView(APIView):
         today_class_subjects = teacher_class_subjects.filter(
             week_day=kwargs['week_day']
         )
-        if today_class_subjects.count() > constants.MAX_LESSONS_PER_DAY:
+        if today_class_subjects.count() >= constants.MAX_LESSONS_PER_DAY:
             return False
 
         return True
+    

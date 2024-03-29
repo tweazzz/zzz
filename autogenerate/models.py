@@ -18,6 +18,9 @@ class Schedule(BaseModel):
     class Meta:
         verbose_name_plural = 'Schedules'
 
+    def __str__(self):
+        return f'{self.school_class} {self.subject}'
+
 
 class Subject(BaseModel):
     title = models.CharField(max_length=300)
@@ -36,6 +39,8 @@ class Subject(BaseModel):
     class Meta:
         verbose_name_plural = 'Subjects'
 
+    def __str__(self):
+        return f'{self.title}'
 
 class ClassRoom(BaseModel):
     name = models.CharField(max_length=100)
@@ -62,6 +67,9 @@ class ClassHour(BaseModel):
 
     class Meta:
         verbose_name_plural = 'ClassHours'
+    
+    def __str__(self):
+        return f'{self.start_time} {self.end_time}'
 
 
 class WeekDay(BaseModel):
@@ -84,6 +92,8 @@ class WeekDay(BaseModel):
 
     class Meta:
         verbose_name_plural = 'WeekDays'
+    def __str__(self):
+        return f'{self.value}'
 
 
 class ClassSubject(BaseModel):
@@ -97,3 +107,5 @@ class ClassSubject(BaseModel):
     class Meta:
         verbose_name_plural = 'ClassSubjects'
 
+    def __str__(self):
+        return f'{self.schedule} {self.week_day} {self.class_hour}'

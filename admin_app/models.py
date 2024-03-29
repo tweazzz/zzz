@@ -385,7 +385,7 @@ class Subject(models.Model):
 class schoolPasport(models.Model):
     school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
     school_name = models.CharField(max_length=355, null=True,blank=True)
-    photo = models.ImageField(null=True,blank=True)
+    photo = models.ImageField()
     established = models.IntegerField(default=2008,null=True,blank=True)
     school_address = models.CharField(max_length=250,null=True,blank=True)
     amount_of_children = models.IntegerField(null=True,blank=True)
@@ -430,11 +430,15 @@ class School_SocialMedia(models.Model):
     school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
     INSTAGRAM = 'instagram'
     FACEBOOK = 'facebook'
-    YOUTUBE = 'Youtube'
+    YOUTUBE = 'youtube'
+    WEBSITE = 'website'
+    TGBOT = 'tgbot'
     SOCIAL_MEDIA_CHOICES = [
-        (INSTAGRAM, 'Instagram'),
-        (FACEBOOK, 'Facebook'),
-        (YOUTUBE, 'Youtube'),
+        (INSTAGRAM, 'instagram'),
+        (FACEBOOK, 'facebook'),
+        (YOUTUBE, 'youtube'),
+        (WEBSITE, 'website'),
+        (TGBOT, 'tgbot')
     ]
     type = models.CharField(
         max_length=10,
@@ -487,7 +491,7 @@ class School_SocialMedia(models.Model):
 def generate_or_update_qr_code(sender, instance, **kwargs):
     # Генерируем или обновляем QR-код и сохраняем его в поле qr_code
     qr = qrcode.QRCode(
-        version=1,
+        version=2,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=10,
         border=4,
@@ -498,7 +502,7 @@ def generate_or_update_qr_code(sender, instance, **kwargs):
     qr.add_data(url)
     qr.make(fit=True)
 
-    img = qr.make_image(fill_color="black", back_color="white")
+    img = qr.make_image(fill_color="black", back_color="rgb(255, 99, 71)")
     buffer = BytesIO()
     img.save(buffer)
     filename = f'qr_code.png'
