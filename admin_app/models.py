@@ -197,7 +197,7 @@ class Schedule(models.Model):
     classl = models.ForeignKey('Class', on_delete=models.SET_NULL, null=True)
     teacher = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True)
     ring = models.ForeignKey('Ring', on_delete=models.SET_NULL,null=True)
-    classroom = models.ForeignKey('Classrooms', on_delete=models.SET_NULL, null=True)
+    classroom = models.ForeignKey('Classrooms', on_delete=models.SET_NULL, null=True,blank=True)
     teacher2 = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True,blank=True, related_name='teacher_g2')
     classroom2 = models.ForeignKey('Classrooms', on_delete=models.SET_NULL, null=True,blank=True, related_name='classroom_g2')
     subject2 = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, blank=True, related_name='subject_g2')

@@ -6,6 +6,4 @@ from .models import *
 admin.site.register(Schedule)
 admin.site.register(ClassSubject)
 admin.site.register(WeekDay)
-admin.site.register(ClassHour)
-admin.site.register(Subject)
-admin.site.register(ClassRoom)
+# admin.site.register(ClassRoom)

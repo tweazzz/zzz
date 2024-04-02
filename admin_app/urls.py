@@ -5,7 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from djoser.views import TokenCreateView
 from auth_user.views import AdminUserCreateView,CustomTokenCreateView,AdminUserViewSet,UserMeView
-from autogenerate.views import AutoSchedulerView
+from autogenerate.views import AutoSchedulerView,GenerateSubjectView
 
 
 admin_router = DefaultRouter()
@@ -54,7 +54,8 @@ urlpatterns = [
     path('api/schoolpasport/upload_photo/', schoolPasportApi.as_view({'post': 'upload_photo'}), name='upload_photo'),
     path('users/me/', UserMeView.as_view(), name='user-me'),
     path('get_posts_data/', GetPostsDataView.as_view(), name='get_posts_data'),
-    path('auto_schedule/', AutoSchedulerView.as_view(), name='auto-schedule'),
+    path('create_schedule/', AutoSchedulerView.as_view(), name='auto-schedule'),
+    path('auto_generate/', GenerateSubjectView.as_view(), name='auto-schedule'),
 ]
 
 if settings.DEBUG:

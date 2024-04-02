@@ -8,4 +8,5 @@ class AutoScheduleSerializer(BaseSerializer):
     subject = serializers.PrimaryKeyRelatedField(many=False, queryset=Subject.objects.all())
     lessons_per_week = serializers.IntegerField()
     subgroup = serializers.BooleanField()
+    double_lesson = serializers.BooleanField(default=False)
     total_load = serializers.IntegerField()
