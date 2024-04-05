@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import random
 from django.db.models import Count
+from django.db.models import Q
 
 
 
@@ -62,6 +63,34 @@ class AutoSchedulerView(APIView):
 
         schedule = models.Schedule.objects.create(**schedule_data)
         week_days = models.WeekDay.objects.all()
+        
+
+        if validated_data['subgroup']:
+            try:
+                existing_class_subjects = models.ClassSubject.objects.filter(
+                    Q(schedule__school=request.user.school) &
+                    Q(schedule__school_class=school_class) &
+                    Q(schedule__subject=subject) &
+                    Q(schedule__lessons_per_week=validated_data['lessons_per_week']) &
+                    Q(schedule__double_lesson=validated_data['double_lesson']) &
+                    Q(schedule__total_load=validated_data['total_load']) &
+                    Q(schedule__subgroup=True)
+                )
+
+                # Если найдены существующие объекты для подгруппы, копируем их
+                if existing_class_subjects.exists():
+                    print("Copying existing subgroup schedules")
+                    for existing_subject in existing_class_subjects:
+                        models.ClassSubject.objects.create(
+                            week_day=existing_subject.week_day,
+                            class_hour=existing_subject.class_hour,
+                            schedule=schedule,
+                            school=request.user.school
+                        )
+                    # Пропускаем создание новых объектов
+                    return Response({'message': 'Existing subgroup schedules copied'}, status=status.HTTP_201_CREATED)
+            except ObjectDoesNotExist:
+                pass
 
         for week_day_idx, week_day in enumerate(week_days):
             print(f"Processing Week Day: {week_day}")
@@ -82,8 +111,18 @@ class AutoSchedulerView(APIView):
                     class_hour=class_hour,
                     schedule__teacher=teacher
                 )
+
                 if teacher_schedule.exists():
                     print("Skipping due to teacher schedule conflict")
+                    continue
+
+                existing_class_subject = models.ClassSubject.objects.filter(
+                    week_day=week_day,
+                    class_hour=class_hour,
+                    schedule__school_class=school_class
+                ).exists()
+                if existing_class_subject:
+                    print("Skipping due to existing class subject")
                     continue
 
                 teacher_class_subjects = models.ClassSubject.objects.filter(
@@ -127,6 +166,7 @@ class AutoSchedulerView(APIView):
     def _validate_schedule(*args, **kwargs):
         teacher_class_subjects = kwargs['teacher_class_subjects']
         MAX_LESSONS_PER_DAY = kwargs['MAX_LESSONS_PER_DAY']
+
         if teacher_class_subjects.count() >= kwargs['schedule'].total_load:
             print("Exceeded total load")
             return False
@@ -134,8 +174,15 @@ class AutoSchedulerView(APIView):
         class_subject_week_days_count = len(set(
             teacher_class_subjects.values_list('week_day__id', flat=True)
         ))
-        if class_subject_week_days_count >= kwargs['schedule'].lessons_per_week:
+        if class_subject_week_days_count > kwargs['schedule'].lessons_per_week:
             print("Exceeded lessons per week")
+            return False
+
+        # Считаем общее количество уроков на неделе
+        total_lessons_this_week = teacher_class_subjects.count()
+
+        if total_lessons_this_week >= kwargs['schedule'].total_load:
+            print("Exceeded total load for this week")
             return False
 
         today_class_subjects = teacher_class_subjects.filter(
@@ -147,15 +194,20 @@ class AutoSchedulerView(APIView):
             return False
 
         return True
+
     
-
-
 
 class GenerateSubjectView(APIView):
     # permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
         # Получаем объекты ClassSubject, фильтруем их по школе пользователя
         user_school = request.user.school
+
+
+        # Удаляем все Schedule, принадлежащие пользовательской школе
+        admin_models.Schedule.objects.filter(school=user_school).delete()
+
+        
         class_subjects = models.ClassSubject.objects.filter(school=user_school)
 
         # Создаем объекты Schedule в приложении admin_app, используя данные из ClassSubject

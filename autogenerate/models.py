@@ -22,7 +22,7 @@ class Schedule(BaseModel):
         verbose_name_plural = 'Schedules'
 
     def __str__(self):
-        return f'{self.school_class} {self.subject}'
+        return f'{self.school_class} {self.subject} {self.teacher}'
 
 class WeekDay(BaseModel):
     Monday = "1"
@@ -59,4 +59,4 @@ class ClassSubject(BaseModel):
         verbose_name_plural = 'ClassSubjects'
 
     def __str__(self):
-        return f'{self.schedule} {self.week_day} {self.class_hour}'
+        return f'{self.schedule} {self.week_day} {self.class_hour} {self.schedule}'

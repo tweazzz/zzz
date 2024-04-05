@@ -714,6 +714,8 @@ class Lesson(models.Model):
         default=Kruzhok.Monday,null=True,blank=True
     )
     start_end_time = models.CharField(max_length=150,blank=True,null=True)
+    classroom = models.ForeignKey('Classrooms', on_delete=models.SET_NULL, null=True,blank=True)
+
 
     def __str__(self):
         return f'{self.kruzhok.kruzhok_name} - {self.week_day} {self.start_end_time}'

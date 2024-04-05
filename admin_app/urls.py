@@ -55,7 +55,7 @@ urlpatterns = [
     path('users/me/', UserMeView.as_view(), name='user-me'),
     path('get_posts_data/', GetPostsDataView.as_view(), name='get_posts_data'),
     path('create_schedule/', AutoSchedulerView.as_view(), name='auto-schedule'),
-    path('auto_generate/', GenerateSubjectView.as_view(), name='auto-schedule'),
+    path('auto_generate/', GenerateSubjectView.as_view(), name='auto-copy'),
 ]
 
 if settings.DEBUG:

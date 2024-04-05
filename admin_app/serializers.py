@@ -67,7 +67,7 @@ class AvailableSchoolSerializer(serializers.ModelSerializer):
 class AvailableTeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
-        fields = ['id', 'full_name']
+        fields = ['id', 'full_name', 'photo3x4']
 
 class AvailableRingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -609,12 +609,12 @@ class TeacherWorkloadSerializer(serializers.ModelSerializer):
 class LessonReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ['week_day', 'start_end_time']
+        fields = ['week_day','classroom', 'start_end_time']
 
 class LessonWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ['week_day', 'start_end_time']
+        fields = ['week_day', 'classroom', 'start_end_time']
 
 class KruzhokReadSerializer(serializers.ModelSerializer):
     teacher = AvailableTeacherSerializer(read_only=True)
@@ -629,15 +629,17 @@ class KruzhokReadSerializer(serializers.ModelSerializer):
         representation = super(KruzhokReadSerializer, self).to_representation(instance)
 
         teacher_data = AvailableTeacherSerializer(instance.teacher).data
+        teacher = TeacherReadSerializer(instance.teacher).data
         representation['teacher'] = {
             'id': teacher_data.get('id'),
-            'full_name': teacher_data.get('full_name')
+            'full_name': teacher_data.get('full_name'),
+            'photo3x4': teacher.get('photo3x4')
         }
 
         representation['lessons'] = LessonReadSerializer(instance.lessons.all(), many=True).data
 
         return representation
-
+    
 class KruzhokWriteSerializer(serializers.ModelSerializer):
     lessons = LessonWriteSerializer(many=True, write_only=True)
     teacher = AvailableTeacherSerializer(read_only=True)
