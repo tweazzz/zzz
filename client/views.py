@@ -44,17 +44,17 @@ class ClassApi(generics.ListAPIView):
             return Class.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Class.objects.all()
         return Class.objects.all()
     
-class ScheduleApi(generics.ListAPIView):
-    queryset = Schedule.objects.all()
-    serializer_class = ScheduleSerializer
-    permission_classes = [IsClient]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = ScheduleFilter
+# class ScheduleApi(generics.ListAPIView):
+#     queryset = Schedule.objects.all()
+#     serializer_class = ScheduleSerializer
+#     permission_classes = [IsClient]
+#     filter_backends = [DjangoFilterBackend]
+#     filterset_class = ScheduleFilter
 
-    def get_queryset(self):
-        if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Schedule.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Schedule.objects.all()
-        return Schedule.objects.all()
+#     def get_queryset(self):
+#         if self.request.user.is_authenticated and self.request.user.role == 'client':
+#             return Schedule.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Schedule.objects.all()
+#         return Schedule.objects.all()
     
 
 class MenuApi(generics.ListAPIView):

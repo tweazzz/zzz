@@ -42,12 +42,7 @@ class UsersAdmin(UserAdmin):
 
 
 admin.site.register(User, UsersAdmin)
-
-
-
 admin.site.register(News)
-
-
 admin.site.register(School)
 admin.site.register(Classrooms)
 admin.site.register(Schedule)
@@ -70,7 +65,6 @@ class KruzhokAdmin(admin.ModelAdmin):
     inlines = [LessonInline]
 
 admin.site.register(Kruzhok, KruzhokAdmin)
-
 admin.site.register(DopUrok)
 admin.site.register(TeacherWorkload)
 admin.site.register(Sport_Success)
@@ -83,3 +77,5 @@ admin.site.register(Ring)
 admin.site.register(DopUrokRing)
 admin.site.register(Notifications)
 admin.site.register(SchoolMap)
+admin.site.register(MainSchoolPhoto)
+admin.site.register(MapCoordinates)

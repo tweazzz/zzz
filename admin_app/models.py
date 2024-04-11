@@ -455,38 +455,6 @@ class School_SocialMedia(models.Model):
     def __str__(self):
         return f'{self.school} Social Media {self.type}'
 
-    def get_social_media_url(self):
-        if self.type == self.INSTAGRAM:
-            # Генерируем URL Instagram
-            if not self.account_name.startswith("https://www.instagram.com/"):
-                return f"https://www.instagram.com/{self.account_name}/"
-            return self.account_name
-
-        if self.type == self.FACEBOOK:
-            # Генерируем URL Facebook
-            if not self.account_name.startswith("https://facebook.com/"):
-                return f"https://facebook.com/mrbeast/{self.account_name}/"
-            return None  # Для Facebook нет специального URL
-
-        elif self.type == self.YOUTUBE:
-            # Генерируем URL YouTube
-            if not self.account_name.startswith("https://www.youtube.com/"):
-                return f"https://www.youtube.com/{self.account_name}/"
-            return None  # Для YouTube нет специального URL
-
-        return None
-
-    def save(self, *args, **kwargs):
-        # Если тип социальной сети - Instagram, сохраняем URL в поле account_name
-        if self.type == self.INSTAGRAM:
-            self.account_name = self.get_social_media_url()
-        if self.type == self.FACEBOOK:
-            self.account_name = self.get_social_media_url()
-        if self.type == self.YOUTUBE:
-            self.account_name = self.get_social_media_url()
-
-        super().save(*args, **kwargs)
-
 @receiver(pre_save, sender=School_SocialMedia)
 def generate_or_update_qr_code(sender, instance, **kwargs):
     # Генерируем или обновляем QR-код и сохраняем его в поле qr_code
@@ -498,11 +466,11 @@ def generate_or_update_qr_code(sender, instance, **kwargs):
     )
 
     # Используем URL социальной медиа при создании QR-кода
-    url = instance.get_social_media_url()
+    url = instance.account_name
     qr.add_data(url)
     qr.make(fit=True)
 
-    img = qr.make_image(fill_color="black", back_color="rgb(255, 99, 71)")
+    img = qr.make_image(fill_color="black", back_color="white")
     buffer = BytesIO()
     img.save(buffer)
     filename = f'qr_code.png'
@@ -637,8 +605,6 @@ class Extra_Lessons(models.Model):
     def __str__(self):
         return f'{self.type_full_name}'
 
-
-
 # ====================================================
 #             History
 
@@ -720,7 +686,6 @@ class Lesson(models.Model):
     def __str__(self):
         return f'{self.kruzhok.kruzhok_name} - {self.week_day} {self.start_end_time}'
 
-
 class Notifications(models.Model):
     school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
     text = models.TextField()
@@ -731,8 +696,6 @@ class Notifications(models.Model):
 
     def __str__(self):
         return f'{self.school} + {self.created_at.strftime("%Y-%m-%d %H:%M:%S")}'
-
-
 
 class SchoolMap(models.Model):
     school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
@@ -748,3 +711,33 @@ class SchoolMap(models.Model):
 
     def __str__(self):
         return f'{self.school}'
+    
+class MainSchoolPhoto(models.Model):
+    photo1 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo2 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo3 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo4 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo5 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo6 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo7 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo8 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo9 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    photo10 = models.ImageField(upload_to='school_photos/',null=True,blank=True)
+    school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True, related_name='school')
+
+    class Meta:
+        verbose_name_plural = "MainSchoolPhoto"
+
+    def __str__(self):
+        return f'{self.school}'
+
+class MapCoordinates(models.Model):
+    x = models.CharField(max_length=255)
+    y = models.CharField(max_length=255)
+    school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True, related_name='school_coordinates')
+
+    class Meta:
+        verbose_name_plural = "MapCoordinates"
+
+    def __str__(self):
+        return f'{self.x}_{self.y}_{self.school}'
