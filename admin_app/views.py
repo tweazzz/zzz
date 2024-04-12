@@ -108,8 +108,21 @@ class ClassApi(viewsets.ModelViewSet):
         else:
             return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
+from django.db.models import Prefetch
 class ScheduleApi(viewsets.ModelViewSet):
-    queryset = Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2', 'typez')
+    # queryset = Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2', 'typez')
+
+    # Добавим prefetch_related для остальных связанных моделей
+    queryset = Schedule.objects.all().prefetch_related(
+        Prefetch('school__classrooms_set', queryset=Classrooms.objects.all()),
+        Prefetch('school__class_set', queryset=Class.objects.all()),
+        Prefetch('school__teacher_set', queryset=Teacher.objects.all()),
+        Prefetch('school__ring_set', queryset=Ring.objects.all()),
+        Prefetch('school__subject_set', queryset=Subject.objects.all()),
+        Prefetch('school__dopurokring_set', queryset=DopUrokRing.objects.all()),
+        Prefetch('school__dopurok_set', queryset=DopUrok.objects.all()),
+        Prefetch('school__extra_lessons_set', queryset=Extra_Lessons.objects.all()),
+    )  
     serializer_class = ScheduleSerializer
     permission_classes = [IsAdminSchool]
     # filter_backends = [DjangoFilterBackend]
@@ -128,9 +141,9 @@ class ScheduleApi(viewsets.ModelViewSet):
     # def available_ring(self, request, *args, **kwargs):
     #     if self.request.user.is_authenticated:
     #         if self.request.user.is_superuser:
-    #             ring = Ring.objects.all()
+    #             ring = Ring.objects.all().select_related('school')
     #         else:
-    #             ring = Ring.objects.filter(school=self.request.user.school)
+    #             ring = Ring.objects.select_related('school').filter(school=self.request.user.school)
 
     #         ring_filter = AvailableRingFilter(request.GET, queryset=ring)
     #         serializer = AvailableRingSerializer(ring_filter.qs, many=True)
@@ -143,9 +156,9 @@ class ScheduleApi(viewsets.ModelViewSet):
     # def available_dopurok_ring(self, request, *args, **kwargs):
     #     if self.request.user.is_authenticated:
     #         if self.request.user.is_superuser:
-    #             ring = DopUrokRing.objects.all()
+    #             ring = DopUrokRing.objects.all().select_related('school')
     #         else:
-    #             ring = DopUrokRing.objects.filter(school=self.request.user.school)
+    #             ring = DopUrokRing.objects.select_related('school').filter(school=self.request.user.school)
 
     #         ring_filter = AvailableDopUrokRingFilter(request.GET, queryset=ring)
     #         serializer = AvailableDopUrokRingSerializer(ring_filter.qs, many=True)
@@ -158,9 +171,9 @@ class ScheduleApi(viewsets.ModelViewSet):
     # def available_subject(self, request, *args, **kwargs):
     #     if self.request.user.is_authenticated:
     #         if self.request.user.is_superuser:
-    #             classroom = Subject.objects.all()
+    #             classroom = Subject.objects.all().select_related('school')
     #         else:
-    #             classroom = Subject.objects.filter(school=self.request.user.school)
+    #             classroom = Subject.objects.select_related('school').filter(school=self.request.user.school)
 
     #         serializer = AvailableSubjectSerializer(classroom, many=True)
     #         return Response(serializer.data, status=status.HTTP_200_OK)

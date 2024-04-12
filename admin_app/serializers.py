@@ -24,7 +24,7 @@ class RingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ring
         fields = ['id','plan','smena','number','start_time','end_time','school']
-        read_only_fields = ['school']
+        # read_only_fields = ['school']
 
 class MenuSerializer(serializers.ModelSerializer):
     class Meta:
@@ -171,18 +171,18 @@ class ClassSerializer(serializers.ModelSerializer):
         fields = ['id', 'class_name', 'class_number', 'language', 'classroom', 'class_teacher', 'osnova_plan', 'osnova_smena', 'dopurok_plan', 'dopurok_smena', 'school']
         read_only_fields = ['school']
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
 
-        # Проверяем наличие classroom_id и преобразуем в соответствующий объект или None
-        representation['classroom'] = (AvailableClassRoomSerializer(instance.classroom).data 
-                                        if instance.classroom_id is not None else None)
+    #     # Проверяем наличие classroom_id и преобразуем в соответствующий объект или None
+    #     representation['classroom'] = (AvailableClassRoomSerializer(instance.classroom).data 
+    #                                     if instance.classroom_id is not None else None)
 
-        # Проверяем наличие class_teacher_id и преобразуем в соответствующий объект или None
-        representation['class_teacher'] = (AvailableTeacherSerializer(instance.class_teacher).data 
-                                            if instance.class_teacher_id is not None else None)
+    #     # Проверяем наличие class_teacher_id и преобразуем в соответствующий объект или None
+    #     representation['class_teacher'] = (AvailableTeacherSerializer(instance.class_teacher).data 
+    #                                         if instance.class_teacher_id is not None else None)
 
-        return representation
+    #     return representation
 
 class PandikOlimpiada_SuccessSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(
@@ -246,28 +246,6 @@ class Extra_LessonSerializer(serializers.ModelSerializer):
         model = Extra_Lessons
         fields = ['id','type_full_name','type_color','school']
         read_only_fields = ['school']
-
-class ClassSerializer(serializers.ModelSerializer):
-    classroom = AvailableClassRoomSerializer(required=False, allow_null=True)
-    class_teacher = AvailableTeacherSerializer(required=False, allow_null=True)
-
-    class Meta:
-        model = Class
-        fields = ['id', 'class_name', 'class_number', 'language', 'classroom', 'class_teacher', 'osnova_plan', 'osnova_smena', 'dopurok_plan', 'dopurok_smena', 'school']
-        read_only_fields = ['school']
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-
-        # Проверяем наличие classroom_id и преобразуем в соответствующий объект или None
-        representation['classroom'] = (AvailableClassRoomSerializer(instance.classroom).data 
-                                        if instance.classroom_id is not None else None)
-
-        # Проверяем наличие class_teacher_id и преобразуем в соответствующий объект или None
-        representation['class_teacher'] = (AvailableTeacherSerializer(instance.class_teacher).data 
-                                            if instance.class_teacher_id is not None else None)
-
-        return representation
 
 class DopUrokSerializer(serializers.ModelSerializer):
     class Meta:
