@@ -10,10 +10,10 @@ from admin_app.permissions import IsAdminSchool,IsSuperAdminOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from admin_app.filters import *
 from rest_framework import permissions, generics
+from rest_framework import viewsets
 
 
-
-class SchoolsApi(generics.ListAPIView):
+class SchoolsApi(viewsets.ReadOnlyModelViewSet):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
     permission_classes = [IsClient]
@@ -278,6 +278,7 @@ class KruzhokListApi(generics.ListAPIView):
     model = Kruzhok
     photo_field = 'photo'
     queryset = Kruzhok.objects.all()
+    serializer_class = KruzhokReadSerializer
     permission_classes = [IsClient]
     filter_backends = [DjangoFilterBackend]
     filterset_class = KruzhokFilter
@@ -325,14 +326,16 @@ class NewsApi(generics.ListAPIView):
         return News.objects.all()
     
 class NotificationsApi(generics.ListAPIView):
-    queryset = Notifications.objects.all()
+    queryset = Notifications.objects.all().order_by('-created_at')
     serializer_class = NotificationsSerializer
     permission_classes = [IsClient]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NotificationsFilter
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Notifications.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Notifications.objects.all()
-        return Notifications.objects.all()
+            return Notifications.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Notifications.objects.all().order_by('-created_at')
+        return Notifications.objects.all().order_by('-created_at')
     
 class SchoolMapApi(generics.ListAPIView):
     queryset = SchoolMap.objects.all()

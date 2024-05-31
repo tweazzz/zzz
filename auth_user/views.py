@@ -274,3 +274,14 @@ def confirm_verification_code(request):
     user.save()
 
     return Response({'message': 'Верификация прошла усепшно!'}, status=status.HTTP_200_OK)
+
+
+from rest_framework import viewsets
+from fcm_django.models import FCMDevice
+from .serializers import FCMDeviceSerializer
+class FCMDeviceViewSet(viewsets.ModelViewSet):
+    queryset = FCMDevice.objects.all()
+    serializer_class = FCMDeviceSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

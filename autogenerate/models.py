@@ -38,7 +38,7 @@ class WeekDay(BaseModel):
         (Friday, "5"),
     ]
     value = models.CharField(max_length=20, choices=WEEK_DAY_CHOICES)
-    class_hours = models.ManyToManyField(admin_models.Ring, related_name='week_days')
+    class_hours = models.ManyToManyField(admin_models.Ring, related_name='week_days',null=True,blank=True)
 
     class Meta:
         verbose_name_plural = 'WeekDays'

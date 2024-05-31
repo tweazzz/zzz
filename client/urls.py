@@ -8,7 +8,7 @@ from auth_user.views import CustomTokenCreateView,UserMeView
 
 client_router = DefaultRouter()
 client_router.register(r'api/users', ClientUserViewSet, basename='client')
-# client_router.register(r'api/school', SchoolsApi,basename='api-school')
+client_router.register(r'api/school', SchoolsApi,basename='api-school')
 # client_router.register(r'api/classroom', ClassroomApi,basename='api-classroom')
 # client_router.register(r'api/teacher', TeacherApi,basename='api-teacher')
 # client_router.register(r'api/class', ClassApi,basename='api-class')
@@ -30,7 +30,7 @@ client_router.register(r'api/users', ClientUserViewSet, basename='client')
 # client_router.register(r'api/ringApi', RingApi,basename='api-ringApi')
 # client_router.register(r'api/DopUrokApi', DopUrokApi,basename='api-DopUrokApi')
 # client_router.register(r'api/DopUrokRingApi', DopUrokRingApi,basename='api-DopUrokRingApi')
-# client_router.register(r'api/newsApi', NewsApi,basename='api-NewsApi')
+# client_router.register(r'api/newsApi', NewsApi,basename='client-api-NewsApi')
 # client_router.register(r'api/notification', NotificationsApi,basename='api-notification')
 # client_router.register(r'api/schoolmap', SchoolMapApi,basename='api-schoolmap')
 
@@ -39,7 +39,7 @@ urlpatterns = [
     path('login/', CustomTokenCreateView.as_view(), name='client_token_create'),
     path('register/', ClientUserCreateView.as_view(), name='client_user_create'),
     path('users/me/', UserMeView.as_view(), name='user-me'),
-    path('api/school/', SchoolsApi.as_view(), name='api-school'),
+    # path('api/school/', SchoolsApi.as_view(), name='api-school'),
     path('api/classroom/', ClassroomApi.as_view(), name='api-classroom'),
     path('api/teacher/', TeacherApi.as_view(), name='api-teacher'),
     path('api/class/', ClassApi.as_view(), name='api-class'),

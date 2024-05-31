@@ -5,9 +5,7 @@ from admin_app import models as admin_models
 from rest_framework.response import Response
 from rest_framework import status
 import random
-from django.db.models import Count
-from django.db.models import Q
-
+from django.db.models import Q,Count
 
 
 
@@ -207,7 +205,6 @@ class GenerateSubjectView(APIView):
         # Удаляем все Schedule, принадлежащие пользовательской школе
         admin_models.Schedule.objects.filter(school=user_school).delete()
 
-        
         class_subjects = models.ClassSubject.objects.filter(school=user_school)
 
         # Создаем объекты Schedule в приложении admin_app, используя данные из ClassSubject

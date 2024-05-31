@@ -8,7 +8,7 @@ import qrcode
 from PIL import Image
 from django.core.files.base import ContentFile
 from io import BytesIO
-
+from django.core.files import File
 
 class School(models.Model):
     school_kz_name = models.CharField('school_full_name', max_length=255)
@@ -50,6 +50,7 @@ class School(models.Model):
         choices=timezone_choices,
         default=GMT_5,
     )
+    qrcode = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
     user = models.OneToOneField('auth_user.User', on_delete=models.SET_NULL, blank=True, null=True, related_name='school_user')
 
     class Meta:
@@ -57,6 +58,18 @@ class School(models.Model):
 
     def __str__(self):
         return f'{self.school_kz_name}'
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.url:
+            qr_url = f"https://my.kestesi.kz/{self.url}"
+            qr = qrcode.make(qr_url)
+            qr_io = BytesIO()
+            qr.save(qr_io, format='PNG')
+            qr_file = File(qr_io, name=f'qrcode_{self.pk}.png')
+
+            self.qrcode.save(qr_file.name, qr_file, save=False)
+        super().save(*args, **kwargs)
 
 class Classrooms(models.Model):
     classroom_name = models.CharField(max_length=250)
@@ -149,8 +162,6 @@ class TeacherWorkload(models.Model):
     def __str__(self):
         return f"{self.teacher} Workload"
 
-
-
 class Ring(models.Model):
     school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
     plan = models.PositiveIntegerField(choices=[(i, i) for i in range(1, 10)])
@@ -170,7 +181,6 @@ class DopUrokRing(models.Model):
     end_time = models.TimeField(default=datetime.time(0, 0))
     def __str__(self):
         return f'{self.start_time}-{self.end_time}'
-
 
 class Schedule(models.Model):
     school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
@@ -383,7 +393,7 @@ class Subject(models.Model):
 # =============== School Pasport ============================================================
 
 class schoolPasport(models.Model):
-    school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
+    school = models.OneToOneField('School', on_delete=models.SET_NULL, null=True)
     school_name = models.CharField(max_length=355, null=True,blank=True)
     photo = models.ImageField()
     established = models.IntegerField(default=2008,null=True,blank=True)
@@ -420,6 +430,7 @@ class schoolPasport(models.Model):
     school_history = models.TextField(null=True,blank=True)
 
     class Meta:
+        unique_together = ('school',)
         verbose_name_plural = 'School Pasport'
 
     def __str__(self):
@@ -741,3 +752,26 @@ class MapCoordinates(models.Model):
 
     def __str__(self):
         return f'{self.x}_{self.y}_{self.school}'
+    
+
+class ProudOfSchool(models.Model):
+    school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
+    fullname = models.CharField(max_length=150,null=True,blank=True)
+    photo = models.ImageField(null=True,blank=True)
+    student_success = models.TextField(null=True,blank=True)
+    SUCCESS_CHOICES = [
+        ('sport', 'sport'),
+        ('olimpiada', 'olimpiada'),
+        ('altynbelgi', 'altynbelgi'),
+        ('redcertificate', 'redcertificate'),
+    ]
+    success = models.CharField(
+        max_length=200,
+        choices=SUCCESS_CHOICES,
+        default='olimpiada',null=True,blank=True
+    )
+    class Meta:
+        verbose_name_plural = f"Pride of the School"
+
+    def __str__(self):
+        return f'{self.fullname}'

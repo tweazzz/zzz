@@ -77,5 +77,9 @@ class EmailVerificationCode(models.Model):
     def __str__(self):
         return f'Phone Verification Code for {self.user.username}'
     
+from django.db import models
+from fcm_django.models import FCMDevice
 
-
+class UserNotificationDevice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notification_devices')
+    device = models.ForeignKey(FCMDevice, on_delete=models.CASCADE, related_name='user_notifications')

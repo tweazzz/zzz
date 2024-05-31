@@ -30,3 +30,4 @@ def send_verification_code_email(email, code):
     from_email = 'akimzhankonarbayev@yandex.ru'
     recipient_list = [email]
     send_mail(subject, message, from_email, recipient_list)
+

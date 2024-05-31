@@ -14,10 +14,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
     school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
     password = serializers.CharField(write_only=True, required=False)
-
+    school_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'school', 'role','password')
+        fields = ('id', 'email', 'username', 'school','school_url', 'role','password')
         extra_kwargs = {
             'school': {'read_only': True},
             'role': {'read_only': True},
@@ -45,6 +46,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
             instance.save(update_fields=['password'])
         return instance
+    def get_school_url(self, obj):
+        if obj.school:
+            return obj.school.url
+        else:
+            return None
 
 
 class UserMeSerializer(serializers.ModelSerializer):
@@ -142,3 +148,9 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
 class PasswordResetVerifySerializer(serializers.Serializer):
     code = serializers.CharField(max_length=4, required=True)
     email = serializers.EmailField()
+
+from fcm_django.models import FCMDevice
+class FCMDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FCMDevice
+        fields = '__all__'

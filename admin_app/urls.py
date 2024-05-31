@@ -30,7 +30,7 @@ admin_router.register(r'api/PandikOlimpiadaApi', PandikOlimpiadaApi)
 admin_router.register(r'api/School_RedCertificateApi', School_RedCertificateApi)
 admin_router.register(r'api/School_AltynBelgiApi', School_AltynBelgiApi)
 admin_router.register(r'api/School_SocialMediaApi', School_SocialMediaApi)
-# admin_router.register(r'api/ringApi', RingApi)
+admin_router.register(r'api/ringApi', RingApi)
 admin_router.register(r'api/DopUrokApi', DopUrokApi)
 admin_router.register(r'api/DopUrokRingApi', DopUrokRingApi)
 admin_router.register(r'api/newsApi', NewsApi, basename='news')
@@ -38,6 +38,7 @@ admin_router.register(r'api/notification', NotificationsApi)
 admin_router.register(r'api/schoolmap', SchoolMapApi)
 admin_router.register(r'api/main_slider', MainSchoolPhotoView,basename='main_slider')
 admin_router.register(r'api/map_coordinates', MapCoordinatesView ,basename='map_coordinates')
+admin_router.register(r'api/proudofschool', ProudOfSchoolView ,basename='proud_of_school')
 
 urlpatterns = [
     path('', include(admin_router.urls)),
@@ -58,7 +59,10 @@ urlpatterns = [
     path('get_posts_data/', GetPostsDataView.as_view(), name='get_posts_data'),
     path('create_schedule/', AutoSchedulerView.as_view(), name='auto-schedule'),
     path('auto_generate/', GenerateSubjectView.as_view(), name='auto-copy'),
+    path('api/delete_class_schedule/', ScheduleApi.as_view({'post': 'delete_schedule_by_class'}), name='delete-class-schedule'),
+    path('api/delete_class_dopurok/', DopUrokApi.as_view({'post': 'delete_dopurok_by_class'}), name='delete-class-dopurok'),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

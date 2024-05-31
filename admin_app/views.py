@@ -108,77 +108,91 @@ class ClassApi(viewsets.ModelViewSet):
         else:
             return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
+from rest_framework.pagination import PageNumberPagination
+
+class SchedulePagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 from django.db.models import Prefetch
 class ScheduleApi(viewsets.ModelViewSet):
-    # queryset = Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2', 'typez')
+    queryset = Schedule.objects.all().select_related('school', 'teacher', 'ring', 
+                                                     'classl', 'subject', 'classroom', 'teacher2', 
+                                                     'classroom2', 'subject2', 'typez')
 
-    # Добавим prefetch_related для остальных связанных моделей
-    queryset = Schedule.objects.all().prefetch_related(
-        Prefetch('school__classrooms_set', queryset=Classrooms.objects.all()),
-        Prefetch('school__class_set', queryset=Class.objects.all()),
-        Prefetch('school__teacher_set', queryset=Teacher.objects.all()),
-        Prefetch('school__ring_set', queryset=Ring.objects.all()),
-        Prefetch('school__subject_set', queryset=Subject.objects.all()),
-        Prefetch('school__dopurokring_set', queryset=DopUrokRing.objects.all()),
-        Prefetch('school__dopurok_set', queryset=DopUrok.objects.all()),
-        Prefetch('school__extra_lessons_set', queryset=Extra_Lessons.objects.all()),
-    )  
     serializer_class = ScheduleSerializer
     permission_classes = [IsAdminSchool]
-    # filter_backends = [DjangoFilterBackend]
-    # filterset_class = ScheduleFilter
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ScheduleFilter
+    #pagination_class = SchedulePagination
 
-    # def perform_create(self, serializer):
-    #     if self.request.user.is_authenticated:
-    #         serializer.save(school=self.request.user.school)
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(school=self.request.user.school)
 
-    # def get_queryset(self):
-    #     if self.request.user.is_authenticated:
-    #         return Schedule.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2', 'typez')
-    #     return Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2', 'typez')
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return Schedule.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2', 'typez')
+        return Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2', 'typez')
     
-    # @action(detail=False, methods=['get'])
-    # def available_ring(self, request, *args, **kwargs):
-    #     if self.request.user.is_authenticated:
-    #         if self.request.user.is_superuser:
-    #             ring = Ring.objects.all().select_related('school')
-    #         else:
-    #             ring = Ring.objects.select_related('school').filter(school=self.request.user.school)
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def delete_schedule_by_class(self, request):
+        # Получаем ID класса, расписание которого нужно удалить
+        class_id = request.data.get('class_id')
+        if class_id:
+            # Получаем объект класса по его ID
+            class_obj = Class.objects.get(id=class_id)
+            # Проверяем, имеет ли пользователь доступ только к своей школе
+            if not request.user.is_superuser and request.user.school != class_obj.school:
+                return Response({'error': 'You do not have permission to delete schedules for this school.'}, status=status.HTTP_403_FORBIDDEN)
+            # Удаляем все записи расписания для указанного класса
+            deleted_count, _ = Schedule.objects.filter(school=request.user.school, classl=class_obj).delete()
+            return Response({'message': f'Successfully deleted {deleted_count} schedules for class {class_id}.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Class ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    #         ring_filter = AvailableRingFilter(request.GET, queryset=ring)
-    #         serializer = AvailableRingSerializer(ring_filter.qs, many=True)
+    @action(detail=False, methods=['get'])
+    def available_ring(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                ring = Ring.objects.all().select_related('school')
+            else:
+                ring = Ring.objects.select_related('school').filter(school=self.request.user.school)
 
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     else:
-    #         return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            ring_filter = AvailableRingFilter(request.GET, queryset=ring)
+            serializer = AvailableRingSerializer(ring_filter.qs, many=True)
 
-    # @action(detail=False, methods=['get'])
-    # def available_dopurok_ring(self, request, *args, **kwargs):
-    #     if self.request.user.is_authenticated:
-    #         if self.request.user.is_superuser:
-    #             ring = DopUrokRing.objects.all().select_related('school')
-    #         else:
-    #             ring = DopUrokRing.objects.select_related('school').filter(school=self.request.user.school)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
-    #         ring_filter = AvailableDopUrokRingFilter(request.GET, queryset=ring)
-    #         serializer = AvailableDopUrokRingSerializer(ring_filter.qs, many=True)
+    @action(detail=False, methods=['get'])
+    def available_dopurok_ring(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                ring = DopUrokRing.objects.all().select_related('school')
+            else:
+                ring = DopUrokRing.objects.select_related('school').filter(school=self.request.user.school)
 
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     else:
-    #         return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            ring_filter = AvailableDopUrokRingFilter(request.GET, queryset=ring)
+            serializer = AvailableDopUrokRingSerializer(ring_filter.qs, many=True)
 
-    # @action(detail=False, methods=['get'])
-    # def available_subject(self, request, *args, **kwargs):
-    #     if self.request.user.is_authenticated:
-    #         if self.request.user.is_superuser:
-    #             classroom = Subject.objects.all().select_related('school')
-    #         else:
-    #             classroom = Subject.objects.select_related('school').filter(school=self.request.user.school)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
-    #         serializer = AvailableSubjectSerializer(classroom, many=True)
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     else:
-    #         return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+    @action(detail=False, methods=['get'])
+    def available_subject(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                classroom = Subject.objects.all().select_related('school')
+            else:
+                classroom = Subject.objects.select_related('school').filter(school=self.request.user.school)
+
+            serializer = AvailableSubjectSerializer(classroom, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
 class MenuApi(viewsets.ModelViewSet):
     queryset = Menu.objects.all().select_related('school')
@@ -449,23 +463,13 @@ class TeacherApi(PhotoUploadMixin, viewsets.ModelViewSet):
             return Teacher.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Teacher.objects.select_related('school')
         return Teacher.objects.select_related('school')
 
-class TeacherWorkloadApi(viewsets.ModelViewSet):
-    queryset = TeacherWorkload.objects.all()
-    serializer_class = TeacherWorkloadSerializer
-    permission_classes = [IsAdminSchool]
-
-    def perform_create(self, serializer):
-        serializer.save(school=self.request.user.school)
-    def get_queryset(self):
-        return TeacherWorkload.objects.filter(school=self.request.user.school)
-
 class KruzhokListApi(PhotoUploadMixin, viewsets.ModelViewSet):
     model = Kruzhok
     photo_field = 'photo'
     queryset = Kruzhok.objects.all()
     permission_classes = [IsAdminSchool]
     filter_backends = [DjangoFilterBackend]
-    # filterset_class = KruzhokFilter
+    filterset_class = KruzhokFilter
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve','upload_photo']:
@@ -516,6 +520,22 @@ class DopUrokApi(viewsets.ModelViewSet):
         if self.request.user.is_authenticated:
             return DopUrok.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else DopUrok.objects.all()
         return DopUrok.objects.all()
+    
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def delete_schedule_by_class(self, request):
+        # Получаем ID класса, расписание которого нужно удалить
+        class_id = request.data.get('class_id')
+        if class_id:
+            # Получаем объект класса по его ID
+            class_obj = Class.objects.get(id=class_id)
+            # Проверяем, имеет ли пользователь доступ только к своей школе
+            if not request.user.is_superuser and request.user.school != class_obj.school:
+                return Response({'error': 'You do not have permission to delete schedules for this school.'}, status=status.HTTP_403_FORBIDDEN)
+            # Удаляем все записи расписания для указанного класса
+            deleted_count, _ = DopUrok.objects.filter(school=request.user.school, classl=class_obj).delete()
+            return Response({'message': f'Successfully deleted {deleted_count} schedules for class {class_id}.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Class ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
 class DopUrokRingApi(viewsets.ModelViewSet):
     queryset = DopUrokRing.objects.all()
@@ -550,9 +570,11 @@ class NewsApi(viewsets.ModelViewSet):
         return News.objects.all().select_related('school')
     
 class NotificationsApi(viewsets.ModelViewSet):
-    queryset = Notifications.objects.all().select_related('school')
+    queryset = Notifications.objects.all().select_related('school').order_by('-created_at')
     serializer_class = NotificationsSerializer
     permission_classes = [IsAdminSchool]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NotificationsFilter
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -560,8 +582,8 @@ class NotificationsApi(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Notifications.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Notifications.objects.all().select_related('school')
-        return Notifications.objects.all().select_related('school')
+            return Notifications.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Notifications.objects.all().select_related('school').order_by('-created_at')
+        return Notifications.objects.all().select_related('school').order_by('-created_at')
     
 class SchoolMapApi(viewsets.ModelViewSet):
     queryset = SchoolMap.objects.all().select_related('school')
@@ -616,6 +638,8 @@ class MainSchoolPhotoView(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     serializer_class = MainSchoolPhotoSerializer  # Добавляем атрибут serializer_class
     queryset = MainSchoolPhoto.objects.all().select_related('school')
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = MainSliderFilter
     
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -625,7 +649,8 @@ class MainSchoolPhotoView(viewsets.ModelViewSet):
         if self.request.user.is_authenticated:
             return MainSchoolPhoto.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else MainSchoolPhoto.objects.all().select_related('school')
         return MainSchoolPhoto.objects.all().select_related('school')
-    
+
+
 class MapCoordinatesView(viewsets.ModelViewSet):
     permission_classes = [IsAdminSchool]
     serializer_class = MapCoordinatesSerializer  # Добавляем атрибут serializer_class
@@ -639,8 +664,6 @@ class MapCoordinatesView(viewsets.ModelViewSet):
         if self.request.user.is_authenticated:
             return MapCoordinates.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else MapCoordinates.objects.all().select_related('school')
         return MapCoordinates.objects.all().select_related('school')
-    
-
 
 class JobHistory(viewsets.ModelViewSet):
     queryset = JobHistory.objects.select_related('teacher')
@@ -651,3 +674,21 @@ class SpecialityHistory(viewsets.ModelViewSet):
     queryset = SpecialityHistory.objects.select_related('teacher')
     serializer_class = JobHistoryReadSerializer
     permission_classes = [IsAdminSchool]
+
+
+class ProudOfSchoolView(viewsets.ModelViewSet):
+    permission_classes = [IsAdminSchool]
+    serializer_class = ProudOfSchoolSerializer  # Добавляем атрибут serializer_class
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProudOfScoolFilter
+    queryset = ProudOfSchool.objects.all().select_related('school')
+    
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(school=self.request.user.school)
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return ProudOfSchool.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else ProudOfSchool.objects.all().select_related('school')
+        return ProudOfSchool.objects.all().select_related('school')
+
