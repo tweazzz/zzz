@@ -10,35 +10,79 @@ from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerialize
 from admin_app.models import School
 from .models import PasswordResetToken
 
+
 class CustomUserSerializer(serializers.ModelSerializer):
-    fio = serializers.CharField(required=False)
     school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
+    password = serializers.CharField(write_only=True, required=False)
+    school_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'fio', 'school', 'role')
+        fields = ('id', 'email', 'username', 'school', 'school_url', 'role', 'password')
         extra_kwargs = {
-            'fio': {'read_only': True},
+            'school': {'read_only': True},
+            'role': {'read_only': True},
+            'username': {'required': False}
+        }
+
+    def validate(self, data):
+        password = data.get('password')
+        if not password and self.instance is None:
+            raise serializers.ValidationError("Password is required")
+        return data
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().create(validated_data)
+        if password:
+            user.set_password(password)
+            user.save(update_fields=['password'])
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        instance = super().update(instance, validated_data)
+        if password:
+            instance.set_password(password)
+            instance.save(update_fields=['password'])
+        return instance
+
+    def get_school_url(self, obj):
+        if obj.school:
+            return obj.school.url
+        else:
+            return None
+
+
+class UserMeSerializer(serializers.ModelSerializer):
+    school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
+    school_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'school', 'school_name', 'role', 'is_superuser')
+        extra_kwargs = {
             'school': {'read_only': True},
             'role': {'read_only': True},
         }
 
-    def update(self, instance, validated_data):
-        instance.fio = validated_data.get('fio', instance.fio)
-        instance.school = validated_data.get('school', instance.school)
-        instance.email = validated_data.get('email', instance.email)
-        instance.username = validated_data.get('username', instance.username)
-        instance.save()
+    def get_school_name(self, obj):
+        return obj.school.school_kz_name if obj.school else None
 
-        return instance
-    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['school_name'] = self.get_school_name(instance)
+        return representation
+
+
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
     role = serializers.CharField(write_only=True)
-    fio = serializers.CharField(required=False)
+    school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
 
     class Meta(DjoserUserCreateSerializer.Meta):
-        fields = DjoserUserCreateSerializer.Meta.fields + ('role', 'fio',)
+        fields = DjoserUserCreateSerializer.Meta.fields + ('role', 'school',)
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -47,18 +91,18 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
 
     def create(self, validated_data):
         user = super().create(validated_data)
-        user.fio = validated_data.get('fio', '')
         user.role = validated_data.get('role', '')
+        user.school = validated_data.get('school', None)
+        user.is_active = True if validated_data.get('role') == 'admin' else False
         user.save()
         return user
-
 
 
 from djoser.serializers import TokenCreateSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from django.contrib.auth.models import User
+
 
 class TokenSerializer(serializers.ModelSerializer):
     auth_token = serializers.CharField(source='key')
@@ -66,6 +110,7 @@ class TokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Token
         fields = ('auth_token',)
+
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):
     def create(self, validated_data):
@@ -87,9 +132,9 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
 
         if self.user and self.user.is_active:
             request_path = self.context.get("request").path
-            if 'client' in request_path and self.user.role != 'client':
-                raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})
-            elif 'admin' in request_path and self.user.role != 'admin':
+            if 'client' in request_path and self.user.role != 'admin':
+                return attrs
+            elif 'admin' in request_path and (self.user.role != 'admin' and not self.user.is_superuser):
                 raise serializers.ValidationError({"non_field_errors": _("Invalid role for this endpoint.")})
             return attrs
 
@@ -97,13 +142,22 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
 
     def to_representation(self, instance):
         return TokenSerializer(instance).data
-    
+
 
 # class PasswordResetTokenSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = PasswordResetToken
 #         fields = ['email','code', 'is_active']
-    
+
 class PasswordResetVerifySerializer(serializers.Serializer):
     code = serializers.CharField(max_length=4, required=True)
     email = serializers.EmailField()
+
+
+from fcm_django.models import FCMDevice
+
+
+class FCMDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FCMDevice
+        fields = '__all__'

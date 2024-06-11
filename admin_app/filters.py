@@ -1,6 +1,8 @@
 from django_filters import rest_framework as filters
 from admin_app.models import *
 from django.db import models
+import django_filters
+
 
 # class AdminFilter(filters.FilterSet):
 #     class Meta:
@@ -12,22 +14,22 @@ class NewsFilter(filters.FilterSet):
     class Meta:
         model = News
         fields = '__all__'
-        exclude = ['photos','qr_code']
+        exclude = ['img1','img2','img3','img4','img5','img6','img7','img8','img9','img10','qr_code']
 
 class SchoolFilter(filters.FilterSet):
     class Meta:
         model = School
         fields = '__all__'
-        exclude = ['logo']
+        exclude = ['logo','school_map','qrcode']
 
 class ClassFilter(filters.FilterSet):
     class Meta:
-        model = Class
+        model = ClassGroup
         fields = '__all__'
 
 class ClassroomFilter(filters.FilterSet):
     class Meta:
-        model = Classrooms
+        model = Classroom
         fields = '__all__'
 
 class SubjectFilter(filters.FilterSet):
@@ -36,6 +38,8 @@ class SubjectFilter(filters.FilterSet):
         fields = '__all__'
 
 class TeacherFilter(filters.FilterSet):
+    school = django_filters.CharFilter(field_name='school__url')
+    school__id = django_filters.NumberFilter(field_name='school__id')
     class Meta:
         model = Teacher
         fields = '__all__'
@@ -105,9 +109,16 @@ class RingFilter(filters.FilterSet):
         fields = '__all__'
 
 class ScheduleFilter(filters.FilterSet):
+    school = django_filters.CharFilter()
+    subject = django_filters.CharFilter()
+    class_group = django_filters.CharFilter()
+    teacher = django_filters.CharFilter()
+    classroom = django_filters.CharFilter()
+    typez = django_filters.CharFilter()
+    ring = django_filters.CharFilter()
     class Meta:
         model = Schedule
-        fields = '__all__'
+        fields = ['school','subject','class_group','teacher','classroom','typez','ring']
 
 class School_AdministrationFilter(filters.FilterSet):
     class Meta:
@@ -143,10 +154,43 @@ class SliderFilter(filters.FilterSet):
 
 class AvailableClassesFilter(filters.FilterSet):
     class Meta:
-        model = Class
+        model = ClassGroup
         fields = ['id','class_name','class_number']
 
 class AvailableRingFilter(filters.FilterSet):
     class Meta:
         model = Ring
         fields = ['id','start_time','end_time']
+
+
+class AvailableDopUrokRingFilter(filters.FilterSet):
+    class Meta:
+        model = DopUrokRing
+        fields = ['id','start_time','end_time']
+
+
+class SchoolMapFilter(filters.FilterSet):
+    class Meta:
+        model = SchoolMap
+        fields = '__all__'
+        exclude = ['map','flat1','flat2','flat3','flat4','flat5']
+
+
+class MainSliderFilter(filters.FilterSet):
+    class Meta:
+        model = MainSchoolPhoto
+        fields = '__all__'
+        exclude = ['photo1','photo2','photo3','photo4','photo5','photo6','photo7','photo8','photo9','photo10']
+
+
+class ProudOfScoolFilter(filters.FilterSet):
+    class Meta:
+        model = ProudOfSchool
+        fields = '__all__'
+        exclude = ['photo']
+
+
+class NotificationsFilter(filters.FilterSet):
+    class Meta:
+        model = Notifications
+        fields = '__all__'

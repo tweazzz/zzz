@@ -19,38 +19,24 @@ class ClientUserSerializer(serializers.ModelSerializer):
 
 
 class SchoolSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = School
         fields = '__all__'
 
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Classrooms
+        model = Classroom
         fields = ['id','classroom_name', 'classroom_number', 'flat', 'korpus','school']
         read_only_fields = ['school']
-
-
-class ClassSerializer(serializers.ModelSerializer):
-    classroom = serializers.PrimaryKeyRelatedField(queryset=Classrooms.objects.all())
-    class_teacher = serializers.PrimaryKeyRelatedField(queryset=Teacher.objects.all())
-
-    class Meta:
-        model = Class
-        fields = ['id', 'class_name', 'class_number', 'language', 'classroom', 'class_teacher', 'osnova_plan', 'osnova_smena', 'dopurok_plan', 'dopurok_smena', 'school']
-        read_only_fields = ['school']
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['classroom'] = AvailableClassRoomSerializer(instance.classroom).data
-        representation['class_teacher'] = AvailableTeacherSerializer(instance.class_teacher).data
-        return representation
 
 
 class RingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ring
         fields = ['id','plan','smena','number','start_time','end_time','school']
-        read_only_fields = ['school']
+        # read_only_fields = ['school']
 
 class MenuSerializer(serializers.ModelSerializer):
     class Meta:
@@ -84,6 +70,8 @@ class School_AdministrationSerializer(serializers.ModelSerializer):
 
 # ======================================================================
 class AvailableSchoolSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = School
         fields = ['id', 'school_kz_name']
@@ -91,11 +79,16 @@ class AvailableSchoolSerializer(serializers.ModelSerializer):
 class AvailableTeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
-        fields = ['id', 'full_name']
+        fields = ['id', 'full_name', 'photo3x4']
 
 class AvailableRingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ring
+        fields = ['id', 'start_time', 'end_time','plan','smena','number']
+
+class AvailableDopUrokRingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DopUrokRing
         fields = ['id', 'start_time', 'end_time','plan','smena','number']
 
 class AvailableSubjectSerializer(serializers.ModelSerializer):
@@ -105,25 +98,26 @@ class AvailableSubjectSerializer(serializers.ModelSerializer):
 
 class AvailableClassRoomSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Classrooms
+        model = Classroom
         fields = ['id', 'classroom_name','classroom_number']
 
 class AvailableClassesSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Class
-        fields = ['id', 'class_name', 'class_number']
+        model = ClassGroup
+        fields = ['id', 'class_name', 'class_number','class_letter']
+
 
 class Sport_SuccessSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(
         source='classl',
-        queryset=Class.objects.all(),
+        queryset=ClassGroup.objects.all(),
         write_only=True,
         required=False
     )
 
     class Meta:
         model = Sport_Success
-        fields = ['id', 'fullname', 'photo', 'student_success', 'classl', 'school', 'class_id']
+        fields = ['id', 'fullname', 'photo', 'student_success', 'classl', 'class_id', 'school']
         read_only_fields = ['school']
 
     classl = serializers.SerializerMethodField()
@@ -136,17 +130,22 @@ class Sport_SuccessSerializer(serializers.ModelSerializer):
         sport_succes = Sport_Success.objects.create(**validated_data)
         if class_id:
             try:
-                class_instance = Class.objects.get(id=class_id)
+                class_instance = ClassGroup.objects.get(id=class_id)
                 sport_succes.classl = class_instance
                 sport_succes.save()
-            except Class.DoesNotExist:
+            except ClassGroup.DoesNotExist:
                 pass
         return sport_succes
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['class_id'] = instance.classl.id if instance.classl else None
+        return representation
 
 class Oner_SuccessSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(
         source='classl',
-        queryset=Class.objects.all(),
+        queryset=ClassGroup.objects.all(),
         write_only=True,
         required=False
     )
@@ -168,20 +167,42 @@ class Oner_SuccessSerializer(serializers.ModelSerializer):
 
         if class_id:
             try:
-                class_instance = Class.objects.get(id=class_id)
+                class_instance = ClassGroup.objects.get(id=class_id)
                 oner_success.classl = class_instance
                 oner_success.save()
-            except Class.DoesNotExist:
+            except ClassGroup.DoesNotExist:
                 pass
 
         return oner_success
 
 
+class ClassSerializer(serializers.ModelSerializer):
+    classroom = AvailableClassRoomSerializer(required=False, allow_null=True)
+    class_teacher = AvailableTeacherSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = ClassGroup
+        fields = ['id', 'class_name', 'class_number', 'language', 'classroom', 'class_teacher', 'osnova_plan', 'osnova_smena', 'dopurok_plan', 'dopurok_smena', 'school']
+        read_only_fields = ['school']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # Проверяем наличие classroom_id и преобразуем в соответствующий объект или None
+        representation['classroom'] = (AvailableClassRoomSerializer(instance.classroom).data
+                                        if instance.classroom_id is not None else None)
+
+        # Проверяем наличие class_teacher_id и преобразуем в соответствующий объект или None
+        representation['class_teacher'] = (AvailableTeacherSerializer(instance.class_teacher).data
+                                            if instance.class_teacher_id is not None else None)
+
+        return representation
+
 
 class PandikOlimpiada_SuccessSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(
         source='classl',
-        queryset=Class.objects.all(),
+        queryset=ClassGroup.objects.all(),
         write_only=True,
         required=False
     )
@@ -203,10 +224,10 @@ class PandikOlimpiada_SuccessSerializer(serializers.ModelSerializer):
 
         if class_id:
             try:
-                class_instance = Class.objects.get(id=class_id)
+                class_instance = ClassGroup.objects.get(id=class_id)
                 PandikOlimpiada.classl = class_instance
                 PandikOlimpiada.save()
-            except Class.DoesNotExist:
+            except ClassGroup.DoesNotExist:
                 pass
 
         return PandikOlimpiada
@@ -235,6 +256,7 @@ class School_DirectorSerializer(serializers.ModelSerializer):
         fields = ['id','director_name','director_photo','phone_number','email','school']
         read_only_fields = ['school']
 
+
 class Extra_LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Extra_Lessons
@@ -245,220 +267,232 @@ class Extra_LessonSerializer(serializers.ModelSerializer):
 class DopUrokSerializer(serializers.ModelSerializer):
     class Meta:
         model = DopUrok
-        fields = ['id', 'week_day', 'ring','ring_id', 'classl','classl_id', 'teacher', 'teacher_id', 'subject','subject_id', 'classroom','classroom_id', 'teacher2','teacher2_id', 'classroom2','classroom2_id', 'subject2','subject2_id', 'typez','typez_id', 'school']
+        fields = ['id', 'week_day', 'ring','ring_id', 'class_group','class_group_id', 'teacher', 'teacher_id', 'subject','subject_id', 'classroom','classroom_id', 'teacher2','teacher2_id', 'classroom2','classroom2_id', 'subject2','subject2_id', 'typez','typez_id', 'school']
         read_only_fields = ['school']
 
-    teacher = serializers.PrimaryKeyRelatedField(
-        queryset=Teacher.objects.all(),
-        write_only=True,
-        required=False
-    )
-    ring = serializers.PrimaryKeyRelatedField(
-        queryset=Ring.objects.all(),
-        write_only=True,
-        required=False
-    )
-    classl = serializers.PrimaryKeyRelatedField(
-        queryset=Class.objects.all(),
-        write_only=True,
-        required=False
-    )
-    subject = serializers.PrimaryKeyRelatedField(
-        queryset=Subject.objects.all(),
-        write_only=True,
-        required=False
-    )
-    classroom = serializers.PrimaryKeyRelatedField(
-        queryset=Classrooms.objects.all(),
-        write_only=True,
-        required=False
-    )
-    teacher2 = serializers.PrimaryKeyRelatedField(
-        queryset=Teacher.objects.all(),
-        write_only=True,
-        required=False
-    )
-    subject2 = serializers.PrimaryKeyRelatedField(
-        queryset=Subject.objects.all(),
-        write_only=True,
-        required=False
-    )
-    classroom2 = serializers.PrimaryKeyRelatedField(
-        queryset=Classrooms.objects.all(),
-        write_only=True,
-        required=False
-    )
-    typez = serializers.PrimaryKeyRelatedField(
-        queryset=Extra_Lessons.objects.all(),
-        write_only=True,
-        required=False
-    )
+    # teacher = serializers.PrimaryKeyRelatedField(
+    #     queryset=Teacher.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True  # Разрешаем null значения
+    # )
+    # ring = serializers.PrimaryKeyRelatedField(
+    #     queryset=DopUrokRing.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True  # Разрешаем null значения
+    # )
+    # classl = serializers.PrimaryKeyRelatedField(
+    #     queryset=Class.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True  # Разрешаем null значения
+    # )
+    # subject = serializers.PrimaryKeyRelatedField(
+    #     queryset=Subject.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True  # Разрешаем null значения
+    # )
+    # classroom = serializers.PrimaryKeyRelatedField(
+    #     queryset=Classrooms.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True  # Разрешаем null значения
+    # )
+    # teacher2 = serializers.PrimaryKeyRelatedField(
+    #     queryset=Teacher.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True
+    # )
+    # subject2 = serializers.PrimaryKeyRelatedField(
+    #     queryset=Subject.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True
+    # )
+    # classroom2 = serializers.PrimaryKeyRelatedField(
+    #     queryset=Classrooms.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True
+    # )
+    # typez = serializers.PrimaryKeyRelatedField(
+    #     queryset=Extra_Lessons.objects.all(),
+    #     write_only=True,
+    #     required=False,
+    #     allow_null=True
+    # )
 
-    def create(self, validated_data):
-        teacher = validated_data.pop('teacher', None)
-        ring = validated_data.pop('ring', None)
-        classl = validated_data.pop('classl', None)
-        subject = validated_data.pop('subject', None)
-        classroom = validated_data.pop('classroom', None)
-        teacher2 = validated_data.pop('teacher2', None)
-        subject2 = validated_data.pop('subject2', None)
-        classroom2 = validated_data.pop('classroom2', None)
-        typez = validated_data.pop('typez', None)
+    # def create(self, validated_data):
+    #     teacher = validated_data.pop('teacher', None)
+    #     ring = validated_data.pop('ring', None)
+    #     classl = validated_data.pop('classl', None)
+    #     subject = validated_data.pop('subject', None)
+    #     classroom = validated_data.pop('classroom', None)
+    #     teacher2 = validated_data.pop('teacher2', None)
+    #     subject2 = validated_data.pop('subject2', None)
+    #     classroom2 = validated_data.pop('classroom2', None)
+    #     typez = validated_data.pop('typez', None)
 
-        schedule = DopUrok.objects.create(**validated_data)
+    #     schedule = DopUrok.objects.create(**validated_data)
 
-        if teacher:
-            schedule.teacher = teacher
-        if ring:
-            schedule.ring = ring
-        if classl:
-            schedule.classl = classl
-        if subject:
-            schedule.subject = subject
-        if classroom:
-            schedule.classroom = classroom
-        if teacher2:
-            schedule.teacher2 = teacher2
-        if subject2:
-            schedule.subject2 = subject2
-        if classroom2:
-            schedule.classroom2 = classroom2
-        if typez:
-            schedule.typez = typez
+    #     if teacher:
+    #         schedule.teacher = teacher
+    #     if ring:
+    #         schedule.ring = ring
+    #     if classl:
+    #         schedule.classl = classl
+    #     if subject:
+    #         schedule.subject = subject
+    #     if classroom:
+    #         schedule.classroom = classroom
+    #     if teacher2:
+    #         schedule.teacher2 = teacher2
+    #     if subject2:
+    #         schedule.subject2 = subject2
+    #     if classroom2:
+    #         schedule.classroom2 = classroom2
+    #     if typez:
+    #         schedule.typez = typez
 
-        schedule.save()
+    #     schedule.save()
 
-        return schedule
+    #     return schedule
 
-    def update(self, instance, validated_data):
-        instance.week_day = validated_data.get('week_day', instance.week_day)
+    # def update(self, instance, validated_data):
+    #     instance.week_day = validated_data.get('week_day', instance.week_day)
 
-        teacher_id = validated_data.get('teacher')
-        if teacher_id:
-            instance.teacher = Teacher.objects.get(id=teacher_id)
+    #     fields_to_update = ['teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'subject2', 'classroom2', 'typez']
 
-        ring_id = validated_data.get('ring')
-        if ring_id:
-            instance.ring = Ring.objects.get(id=ring_id)
+    #     for field in fields_to_update:
+    #         field_value = validated_data.get(field)
+    #         # Если значение равно None, присваиваем его в instance
+    #         if field_value is not None:
+    #             setattr(instance, field, field_value)
+    #         # Если значение равно None и это поле может быть пустым (null=True), присваиваем None
+    #         elif field in self.fields and getattr(self.fields[field], 'allow_null', False):
+    #             setattr(instance, field, None)
 
-        classl_id = validated_data.get('classl')
-        if classl_id:
-            instance.classl = Class.objects.get(id=classl_id)
+    #     instance.save()
 
-        subject_id = validated_data.get('subject')
-        if subject_id:
-            instance.subject = Subject.objects.get(id=subject_id)
+    #     return instance
 
-        classroom_id = validated_data.get('classroom')
-        if classroom_id:
-            instance.classroom = Classrooms.objects.get(id=classroom_id)
+    # def to_representation(self, instance):
+    #     representation = super(DopUrokSerializer, self).to_representation(instance)
 
-        teacher2_id = validated_data.get('teacher2')
-        if teacher2_id:
-            instance.teacher2 = Teacher.objects.get(id=teacher2_id)
+    #     # Для teacher
+    #     teacher_id = representation.get('teacher_id')
+    #     if teacher_id is not None:
+    #         try:
+    #             teacher_instance = Teacher.objects.get(id=teacher_id)
+    #             representation['teacher'] = AvailableTeacherSerializer(teacher_instance).data
+    #         except Teacher.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['teacher'] = None
 
-        subject2_id = validated_data.get('subject2')
-        if subject2_id:
-            instance.subject2 = Subject.objects.get(id=subject2_id)
+    #     # Для ring
+    #     ring_id = representation.get('ring_id')
+    #     if ring_id is not None:
+    #         try:
+    #             ring_instance = DopUrokRing.objects.get(id=ring_id)
+    #             representation['ring'] = AvailableDopUrokRingSerializer(ring_instance).data
+    #         except Ring.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['ring'] = None
 
-        classroom2_id = validated_data.get('classroom2')
-        if classroom2_id:
-            instance.classroom2 = Classrooms.objects.get(id=classroom2_id)
+    #     # Для classl
+    #     classl_id = representation.get('classl_id')
+    #     if classl_id is not None:
+    #         try:
+    #             class_instance = Class.objects.get(id=classl_id)
+    #             representation['classl'] = AvailableClassesSerializer(class_instance).data
+    #         except Class.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['classl'] = None
 
-        typez_id = validated_data.get('typez')
-        if typez_id:
-            instance.typez = Extra_Lessons.objects.get(id=typez_id)
+    #     # Для subject
+    #     subject_id = representation.get('subject_id')
+    #     if subject_id is not None:
+    #         try:
+    #             subject_instance = Subject.objects.get(id=subject_id)
+    #             representation['subject'] = AvailableSubjectSerializer(subject_instance).data
+    #         except Subject.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['subject'] = None
 
-        instance.save()
+    #     # Для classroom
+    #     classroom_id = representation.get('classroom_id')
+    #     if classroom_id is not None:
+    #         try:
+    #             classroom_instance = Classrooms.objects.get(id=classroom_id)
+    #             representation['classroom'] = AvailableClassRoomSerializer(classroom_instance).data
+    #         except Classrooms.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['classroom'] = None
 
-        return instance
+    #     # Для teacher2
+    #     teacher2_id = representation.get('teacher2_id')
+    #     if teacher2_id is not None:
+    #         try:
+    #             teacher2_instance = Teacher.objects.get(id=teacher2_id)
+    #             representation['teacher2'] = AvailableTeacherSerializer(teacher2_instance).data
+    #         except Teacher.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['teacher2'] = None
 
-    def to_representation(self, instance):
-        representation = super(DopUrokSerializer, self).to_representation(instance)
+    #     # Для subject2
+    #     subject2_id = representation.get('subject2_id')
+    #     if subject2_id is not None:
+    #         try:
+    #             subject2_instance = Subject.objects.get(id=subject2_id)
+    #             representation['subject2'] = AvailableSubjectSerializer(subject2_instance).data
+    #         except Subject.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['subject2'] = None
 
-        teacher_id = representation.get('teacher_id')
-        if teacher_id:
-            try:
-                teacher_instance = Teacher.objects.get(id=teacher_id)
-                representation['teacher'] = AvailableTeacherSerializer(teacher_instance).data
-            except Teacher.DoesNotExist:
-                pass
+    #     # Для classroom2
+    #     classroom2_id = representation.get('classroom2_id')
+    #     if classroom2_id is not None:
+    #         try:
+    #             classroom2_instance = Classrooms.objects.get(id=classroom2_id)
+    #             representation['classroom2'] = AvailableClassRoomSerializer(classroom2_instance).data
+    #         except Classrooms.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['classroom2'] = None
 
-        ring_id = representation.get('ring_id')
-        if ring_id:
-            try:
-                ring_instance = Ring.objects.get(id=ring_id)
-                representation['ring'] = AvailableRingSerializer(ring_instance).data
-            except Ring.DoesNotExist:
-                pass
+    #     # Для typez
+    #     typez_id = representation.get('typez_id')
+    #     if typez_id is not None:
+    #         try:
+    #             typez_instance = Extra_Lessons.objects.get(id=typez_id)
+    #             representation['typez'] = Extra_LessonSerializer(typez_instance).data
+    #         except Extra_Lessons.DoesNotExist:
+    #             pass
+    #     else:
+    #         representation['typez'] = None
 
-        classl_id = representation.get('classl_id')
-        if classl_id:
-            try:
-                class_instance = Class.objects.get(id=classl_id)
-                representation['classl'] = AvailableClassesSerializer(class_instance).data
-            except Class.DoesNotExist:
-                pass
+    #     # Удаляем лишние ключи
+    #     del representation['teacher_id']
+    #     del representation['ring_id']
+    #     del representation['classl_id']
+    #     del representation['subject_id']
+    #     del representation['classroom_id']
+    #     del representation['teacher2_id']
+    #     del representation['subject2_id']
+    #     del representation['classroom2_id']
+    #     del representation['typez_id']
 
-        subject_id = representation.get('subject_id')
-        if subject_id:
-            try:
-                subject_instance = Subject.objects.get(id=subject_id)
-                representation['subject'] = AvailableSubjectSerializer(subject_instance).data
-            except Subject.DoesNotExist:
-                pass
-
-        classroom_id = representation.get('classroom_id')
-        if classroom_id:
-            try:
-                classroom_instance = Classrooms.objects.get(id=classroom_id)
-                representation['classroom'] = AvailableClassRoomSerializer(classroom_instance).data
-            except Classrooms.DoesNotExist:
-                pass
-
-        teacher2_id = representation.get('teacher2_id')
-        if teacher2_id:
-            try:
-                teacher2_instance = Teacher.objects.get(id=teacher2_id)
-                representation['teacher2'] = AvailableTeacherSerializer(teacher2_instance).data
-            except Teacher.DoesNotExist:
-                pass
-
-        subject2_id = representation.get('subject2_id')
-        if subject2_id:
-            try:
-                subject2_instance = Subject.objects.get(id=subject2_id)
-                representation['subject2'] = AvailableSubjectSerializer(subject2_instance).data
-            except Subject.DoesNotExist:
-                pass
-
-        classroom2_id = representation.get('classroom2_id')
-        if classroom2_id:
-            try:
-                classroom2_instance = Classrooms.objects.get(id=classroom2_id)
-                representation['classroom2'] = AvailableClassRoomSerializer(classroom2_instance).data
-            except Classrooms.DoesNotExist:
-                pass
-
-        typez_id = representation.get('typez_id')
-        if typez_id:
-            try:
-                typez_instance = Extra_Lessons.objects.get(id=typez_id)
-                representation['typez'] = Extra_LessonSerializer(typez_instance).data
-            except Extra_Lessons.DoesNotExist:
-                pass
-
-        del representation['teacher_id']
-        del representation['ring_id']
-        del representation['classl_id']
-        del representation['subject_id']
-        del representation['classroom_id']
-        del representation['teacher2_id']
-        del representation['subject2_id']
-        del representation['classroom2_id']
-        del representation['typez_id']
-
-        return representation
+    #     return representation
 
 
 class DopUrokRingSerializer(serializers.ModelSerializer):
@@ -481,9 +515,6 @@ class YearField(serializers.Field):
 
 
 class JobHistoryReadSerializer(serializers.ModelSerializer):
-    start_date = YearField()
-    end_date = YearField()
-
     class Meta:
         model = JobHistory
         fields = ['start_date', 'end_date', 'job_characteristic']
@@ -496,8 +527,6 @@ class JobHistoryWriteSerializer(serializers.ModelSerializer):
 
 
 class SpecialityHistoryReadSerializer(serializers.ModelSerializer):
-    end_date = YearField()
-
     class Meta:
         model = SpecialityHistory
         fields = ['end_date', 'speciality_university', 'mamandygy', 'degree']
@@ -516,7 +545,7 @@ class TeacherReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = ['id', 'full_name', 'photo3x4', 'subject', 'pedagog', 'job_history', 'speciality_history', 'school']
+        fields = ['id', 'full_name', 'photo3x4', 'pedagog', 'job_history', 'speciality_history', 'school']
         read_only_fields = ['school']
 
 
@@ -526,7 +555,7 @@ class TeacherWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = ['id', 'full_name', 'photo3x4', 'subject', 'pedagog', 'school', 'job_history', 'speciality_history']
+        fields = ['id', 'full_name', 'photo3x4', 'pedagog', 'school', 'job_history', 'speciality_history']
         read_only_fields = ['school']
 
     def create(self, validated_data):
@@ -586,12 +615,13 @@ class TeacherWorkloadSerializer(serializers.ModelSerializer):
 class LessonReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ['week_day', 'start_end_time']
+        fields = ['week_day','classroom', 'start_end_time']
+
 
 class LessonWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ['week_day', 'start_end_time']
+        fields = ['week_day', 'classroom', 'start_end_time']
 
 class KruzhokReadSerializer(serializers.ModelSerializer):
     teacher = AvailableTeacherSerializer(read_only=True)
@@ -606,9 +636,11 @@ class KruzhokReadSerializer(serializers.ModelSerializer):
         representation = super(KruzhokReadSerializer, self).to_representation(instance)
 
         teacher_data = AvailableTeacherSerializer(instance.teacher).data
+        teacher = TeacherReadSerializer(instance.teacher).data
         representation['teacher'] = {
             'id': teacher_data.get('id'),
-            'full_name': teacher_data.get('full_name')
+            'full_name': teacher_data.get('full_name'),
+            'photo3x4': teacher.get('photo3x4')
         }
 
         representation['lessons'] = LessonReadSerializer(instance.lessons.all(), many=True).data
@@ -617,6 +649,7 @@ class KruzhokReadSerializer(serializers.ModelSerializer):
 
 class KruzhokWriteSerializer(serializers.ModelSerializer):
     lessons = LessonWriteSerializer(many=True, write_only=True)
+    teacher = AvailableTeacherSerializer(read_only=True)
     teacher_id = serializers.PrimaryKeyRelatedField(
         source='teacher',
         queryset=Teacher.objects.all(),
@@ -681,36 +714,66 @@ class KruzhokWriteSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def update(self, instance, validated_data):
+        lessons_data = validated_data.pop('lessons', [])
+        teacher_id = validated_data.pop('teacher_id', None)
+
+        instance.kruzhok_name = validated_data.get('kruzhok_name', instance.kruzhok_name)
+        instance.purpose = validated_data.get('purpose', instance.purpose)
+
+        if teacher_id:
+            try:
+                teacher = Teacher.objects.get(id=teacher_id)
+                instance.teacher = teacher
+                instance.save()
+            except Teacher.DoesNotExist:
+                pass
+
+        Lesson.objects.filter(kruzhok=instance).delete()
+
+        for lesson_data in lessons_data:
+            Lesson.objects.create(kruzhok=instance, **lesson_data)
+
+        if 'photo' in validated_data:
+            instance.photo = validated_data['photo']
+
+        instance.save()
+
+        return instance
+
 class PhotoforNewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhotoforNews
         fields = ['image']
 
 class NewsSerializer(serializers.ModelSerializer):
-    photos = serializers.ListField(child=serializers.ImageField(), write_only=True, required=False)
 
     class Meta:
         model = News
-        fields = ['id', 'date', 'text', 'type', 'photos', 'qr_code', 'school']
+        fields = ['id', 'date', 'text', 'type', 'img1','img2','img3','img4','img5','img6','img7','img8','img9','img10', 'qr_code', 'school']
         read_only_fields = ['school','qr_code']
 
-    def create(self, validated_data):
-        photos_data = validated_data.pop('photos', [])
+    def update(self, instance, validated_data):
+        # Обновляем текст и тип новости
+        instance.date = validated_data.get('date', instance.date)
+        instance.text = validated_data.get('text', instance.text)
+        instance.type = validated_data.get('type', instance.type)
 
-        for photo in photos_data:
-            if not photo.content_type.startswith('image'):
-                raise serializers.ValidationError("Файл не является изображением.")
+        # Обновляем изображения, если они были предоставлены в данных
+        for img_field in ['img1', 'img2', 'img3', 'img4', 'img5', 'img6', 'img7', 'img8', 'img9', 'img10']:
+            if img_field in validated_data:
+                img_data = validated_data.pop(img_field)
+                # Если img_data равен None, значит, изображение было удалено
+                if img_data is None:
+                    setattr(instance, img_field, None)
+                else:
+                    setattr(instance, img_field, img_data)
 
-        news_instance = News.objects.create(**validated_data)
-
-        for photo in photos_data:
-            PhotoforNews.objects.create(news=news_instance, image=photo)
-
-        return news_instance
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['photos'] = self.get_absolute_photo_urls(instance.photos.all())
 
         if instance.qr_code:
             representation['qr_code'] = self.get_absolute_url(instance.qr_code.url)
@@ -727,56 +790,67 @@ class NewsSerializer(serializers.ModelSerializer):
         request = self.context['request']
         return request.build_absolute_uri(url)
 
+
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ['id', 'week_day', 'ring','ring_id', 'classl','classl_id', 'teacher', 'teacher_id', 'subject','subject_id', 'classroom','classroom_id', 'teacher2','teacher2_id', 'classroom2','classroom2_id', 'subject2','subject2_id', 'typez','typez_id', 'school']
+        fields = ['id', 'week_day', 'ring', 'classl', 'teacher', 'subject', 'classroom', 'teacher2', 'classroom2',
+                  'subject2', 'typez', 'school']
         read_only_fields = ['school']
 
     teacher = serializers.PrimaryKeyRelatedField(
         queryset=Teacher.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True  # Разрешаем null значения
     )
     ring = serializers.PrimaryKeyRelatedField(
         queryset=Ring.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True  # Разрешаем null значения
     )
     classl = serializers.PrimaryKeyRelatedField(
-        queryset=Class.objects.all(),
+        queryset=ClassGroup.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True  # Разрешаем null значения
     )
     subject = serializers.PrimaryKeyRelatedField(
         queryset=Subject.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True  # Разрешаем null значения
     )
     classroom = serializers.PrimaryKeyRelatedField(
-        queryset=Classrooms.objects.all(),
+        queryset=Classroom.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True  # Разрешаем null значения
     )
     teacher2 = serializers.PrimaryKeyRelatedField(
         queryset=Teacher.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True
     )
     subject2 = serializers.PrimaryKeyRelatedField(
         queryset=Subject.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True
     )
     classroom2 = serializers.PrimaryKeyRelatedField(
-        queryset=Classrooms.objects.all(),
+        queryset=Classroom.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True
     )
     typez = serializers.PrimaryKeyRelatedField(
         queryset=Extra_Lessons.objects.all(),
         write_only=True,
-        required=False
+        required=False,
+        allow_null=True
     )
 
     def create(self, validated_data):
@@ -818,41 +892,16 @@ class ScheduleSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.week_day = validated_data.get('week_day', instance.week_day)
 
-        teacher_id = validated_data.get('teacher')
-        if teacher_id:
-            instance.teacher = Teacher.objects.get(id=teacher_id)
+        fields_to_update = ['teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'subject2', 'classroom2',
+                            'typez']
 
-        ring_id = validated_data.get('ring')
-        if ring_id:
-            instance.ring = Ring.objects.get(id=ring_id)
-
-        classl_id = validated_data.get('classl')
-        if classl_id:
-            instance.classl = Class.objects.get(id=classl_id)
-
-        subject_id = validated_data.get('subject')
-        if subject_id:
-            instance.subject = Subject.objects.get(id=subject_id)
-
-        classroom_id = validated_data.get('classroom')
-        if classroom_id:
-            instance.classroom = Classrooms.objects.get(id=classroom_id)
-
-        teacher2_id = validated_data.get('teacher2')
-        if teacher2_id:
-            instance.teacher2 = Teacher.objects.get(id=teacher2_id)
-
-        subject2_id = validated_data.get('subject2')
-        if subject2_id:
-            instance.subject2 = Subject.objects.get(id=subject2_id)
-
-        classroom2_id = validated_data.get('classroom2')
-        if classroom2_id:
-            instance.classroom2 = Classrooms.objects.get(id=classroom2_id)
-
-        typez_id = validated_data.get('typez')
-        if typez_id:
-            instance.typez = Extra_Lessons.objects.get(id=typez_id)
+        for field in fields_to_update:
+            field_value = validated_data.get(field)
+            if field_value is not None:
+                setattr(instance, field, field_value)
+            # Если значение равно None и это поле может быть пустым (null=True), присваиваем None
+            elif field in self.fields and getattr(self.fields[field], 'allow_null', False):
+                setattr(instance, field, None)
 
         instance.save()
 
@@ -861,92 +910,74 @@ class ScheduleSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super(ScheduleSerializer, self).to_representation(instance)
 
-        teacher_id = representation.get('teacher_id')
-        if teacher_id:
-            try:
-                teacher_instance = Teacher.objects.get(id=teacher_id)
-                representation['teacher'] = AvailableTeacherSerializer(teacher_instance).data
-            except Teacher.DoesNotExist:
-                pass
+        # Для teacher
+        teacher_instance = instance.teacher
+        if teacher_instance:
+            representation['teacher'] = AvailableTeacherSerializer(teacher_instance).data
+        else:
+            representation['teacher'] = None
 
-        ring_id = representation.get('ring_id')
-        if ring_id:
-            try:
-                ring_instance = Ring.objects.get(id=ring_id)
-                representation['ring'] = AvailableRingSerializer(ring_instance).data
-            except Ring.DoesNotExist:
-                pass
+        # Для ring
+        ring_instance = instance.ring
+        if ring_instance:
+            representation['ring'] = AvailableRingSerializer(ring_instance).data
+        else:
+            representation['ring'] = None
 
-        classl_id = representation.get('classl_id')
-        if classl_id:
-            try:
-                class_instance = Class.objects.get(id=classl_id)
-                representation['classl'] = AvailableClassesSerializer(class_instance).data
-            except Class.DoesNotExist:
-                pass
+        # Для classl
+        class_instance = instance.classl
+        if class_instance:
+            representation['classl'] = AvailableClassesSerializer(class_instance).data
+        else:
+            representation['classl'] = None
 
-        subject_id = representation.get('subject_id')
-        if subject_id:
-            try:
-                subject_instance = Subject.objects.get(id=subject_id)
-                representation['subject'] = AvailableSubjectSerializer(subject_instance).data
-            except Subject.DoesNotExist:
-                pass
+        # Для subject
+        subject_instance = instance.subject
+        if class_instance:
+            representation['subject'] = AvailableSubjectSerializer(subject_instance).data
+        else:
+            representation['subject'] = None
 
-        classroom_id = representation.get('classroom_id')
-        if classroom_id:
-            try:
-                classroom_instance = Classrooms.objects.get(id=classroom_id)
-                representation['classroom'] = AvailableClassRoomSerializer(classroom_instance).data
-            except Classrooms.DoesNotExist:
-                pass
+        # Для classroom
+        classroom_instance = instance.classroom
+        if classroom_instance:
+            representation['classroom'] = AvailableClassRoomSerializer(classroom_instance).data
+        else:
+            representation['classroom'] = None
 
-        teacher2_id = representation.get('teacher2_id')
-        if teacher2_id:
-            try:
-                teacher2_instance = Teacher.objects.get(id=teacher2_id)
-                representation['teacher2'] = AvailableTeacherSerializer(teacher2_instance).data
-            except Teacher.DoesNotExist:
-                pass
+        # Для teacher2
+        teacher2_instance = instance.teacher2
+        if teacher2_instance:
+            representation['teacher2'] = AvailableTeacherSerializer(teacher2_instance).data
+        else:
+            representation['teacher2'] = None
 
-        subject2_id = representation.get('subject2_id')
-        if subject2_id:
-            try:
-                subject2_instance = Subject.objects.get(id=subject2_id)
-                representation['subject2'] = AvailableSubjectSerializer(subject2_instance).data
-            except Subject.DoesNotExist:
-                pass
+        # Для subject2
+        subject2_instance = instance.subject2
+        if class_instance:
+            representation['subject2'] = AvailableSubjectSerializer(subject2_instance).data
+        else:
+            representation['subject2'] = None
 
-        classroom2_id = representation.get('classroom2_id')
-        if classroom2_id:
-            try:
-                classroom2_instance = Classrooms.objects.get(id=classroom2_id)
-                representation['classroom2'] = AvailableClassRoomSerializer(classroom2_instance).data
-            except Classrooms.DoesNotExist:
-                pass
+        # Для classroom2
+        classroom2_instance = instance.classroom2
+        if classroom2_instance:
+            representation['classroom2'] = AvailableClassRoomSerializer(classroom2_instance).data
+        else:
+            representation['classroom2'] = None
 
-        typez_id = representation.get('typez_id')
-        if typez_id:
-            try:
-                typez_instance = Extra_Lessons.objects.get(id=typez_id)
-                representation['typez'] = Extra_LessonSerializer(typez_instance).data
-            except Extra_Lessons.DoesNotExist:
-                pass
+        # Для typez
 
-        del representation['teacher_id']
-        del representation['ring_id']
-        del representation['classl_id']
-        del representation['subject_id']
-        del representation['classroom_id']
-        del representation['teacher2_id']
-        del representation['subject2_id']
-        del representation['classroom2_id']
-        del representation['typez_id']
+        typez_instance = instance.typez
+        if typez_instance:
+            representation['typez'] = Extra_LessonSerializer(typez_instance).data
+        else:
+            representation['typez'] = None
 
         return representation
     
 class NotificationsSerializer(serializers.ModelSerializer):
-    created_at = serializers.DateTimeField(format="%Y-%m-%d, %H:%M")
+    # created_at = serializers.DateTimeField(format="%Y-%m-%d, %H:%M")
 
     class Meta:
         model = Notifications
@@ -955,4 +986,36 @@ class NotificationsSerializer(serializers.ModelSerializer):
 class SchoolMapSerializer(serializers.ModelSerializer):
     class Meta:
         model = SchoolMap
+        fields = '__all__'
+
+
+class MainSchoolPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MainSchoolPhoto
+        fields = '__all__'
+
+    def update(self, instance, validated_data):
+        for img_field in ['photo1', 'photo2', 'photo3', 'photo4', 'photo5', 'photo6', 'photo7', 'photo8', 'photo9',
+                          'photo10']:
+            if img_field in validated_data:
+                img_data = validated_data.pop(img_field)
+                # Если img_data равен None, значит, изображение было удалено
+                if img_data is None:
+                    setattr(instance, img_field, None)
+                else:
+                    setattr(instance, img_field, img_data)
+
+        instance.save()
+        return instance
+
+
+class MapCoordinatesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MapCoordinates
+        fields = '__all__'
+
+
+class ProudOfSchoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProudOfSchool
         fields = '__all__'

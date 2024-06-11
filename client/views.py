@@ -1,27 +1,28 @@
 from django.shortcuts import render
-from rest_framework import viewsets, status,mixins
+from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView
 from admin_app.models import *
 from admin_app.serializers import *
 from .permissions import IsClient
-from admin_app.permissions import IsAdminSchool,IsSuperAdminOrReadOnly
+from admin_app.permissions import IsAdminSchool, IsSuperAdminOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from admin_app.filters import *
 from rest_framework import permissions, generics
+from rest_framework import viewsets
 
 
-
-class SchoolsApi(generics.ListAPIView):
+class SchoolsApi(viewsets.ReadOnlyModelViewSet):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
     permission_classes = [IsClient]
     filter_backends = [DjangoFilterBackend]
     filterset_class = SchoolFilter
 
+
 class ClassroomApi(generics.ListAPIView):
-    queryset = Classrooms.objects.all()
+    queryset = Classroom.objects.all()
     serializer_class = ClassroomSerializer
     permission_classes = [IsClient]
     filter_backends = [DjangoFilterBackend]
@@ -29,11 +30,13 @@ class ClassroomApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Classrooms.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Classrooms.objects.all()
-        return Classrooms.objects.all()
+            return Classroom.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Classroom.objects.all()
+        return Classroom.objects.all()
+
 
 class ClassApi(generics.ListAPIView):
-    queryset = Class.objects.all()
+    queryset = ClassGroup.objects.all()
     serializer_class = ClassSerializer
     permission_classes = [IsClient]
     filter_backends = [DjangoFilterBackend]
@@ -41,9 +44,11 @@ class ClassApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Class.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Class.objects.all()
-        return Class.objects.all()
-    
+            return ClassGroup.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Class.objects.all()
+        return ClassGroup.objects.all()
+
+
 class ScheduleApi(generics.ListAPIView):
     queryset = Schedule.objects.all()
     serializer_class = ScheduleSerializer
@@ -53,9 +58,10 @@ class ScheduleApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Schedule.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Schedule.objects.all()
+            return Schedule.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Schedule.objects.all()
         return Schedule.objects.all()
-    
+
 
 class MenuApi(generics.ListAPIView):
     queryset = Menu.objects.all()
@@ -64,11 +70,12 @@ class MenuApi(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = MenuFilter
 
-
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Menu.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Menu.objects.all()
+            return Menu.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Menu.objects.all()
         return Menu.objects.all()
+
 
 class SliderApi(generics.ListAPIView):
     queryset = Slider.objects.all()
@@ -77,10 +84,10 @@ class SliderApi(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = SliderFilter
 
-
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Slider.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Slider.objects.all()
+            return Slider.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Slider.objects.all()
         return Slider.objects.all()
 
 
@@ -91,10 +98,10 @@ class SubjectApi(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = SubjectFilter
 
-
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Subject.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Subject.objects.all()
+            return Subject.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Subject.objects.all()
         return Subject.objects.all()
 
 
@@ -109,7 +116,8 @@ class schoolPasportApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return schoolPasport.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else schoolPasport.objects.all()
+            return schoolPasport.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else schoolPasport.objects.all()
         return schoolPasport.objects.all()
 
 
@@ -122,7 +130,8 @@ class School_AdministrationApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return School_Administration.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else School_Administration.objects.all()
+            return School_Administration.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else School_Administration.objects.all()
         return School_Administration.objects.all()
 
 
@@ -135,7 +144,8 @@ class Sport_SuccessApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Sport_Success.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Sport_Success.objects.all()
+            return Sport_Success.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Sport_Success.objects.all()
         return Sport_Success.objects.all()
 
 
@@ -148,9 +158,9 @@ class Oner_SuccessApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Oner_Success.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Oner_Success.objects.all()
+            return Oner_Success.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Oner_Success.objects.all()
         return Oner_Success.objects.all()
-    
 
 
 class PandikOlimpiadaApi(generics.ListAPIView):
@@ -162,7 +172,8 @@ class PandikOlimpiadaApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return PandikOlimpiada_Success.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else PandikOlimpiada_Success.objects.all()
+            return PandikOlimpiada_Success.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else PandikOlimpiada_Success.objects.all()
         return PandikOlimpiada_Success.objects.all()
 
 
@@ -175,7 +186,8 @@ class School_RedCertificateApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return RedCertificate.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else RedCertificate.objects.all()
+            return RedCertificate.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else RedCertificate.objects.all()
         return RedCertificate.objects.all()
 
 
@@ -188,9 +200,11 @@ class School_AltynBelgiApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return AltynBelgi.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else AltynBelgi.objects.all()
+            return AltynBelgi.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else AltynBelgi.objects.all()
         return AltynBelgi.objects.all()
-    
+
+
 class School_SocialMediaApi(generics.ListAPIView):
     queryset = School_SocialMedia.objects.all()
     serializer_class = School_SocialMediaSerializer
@@ -200,8 +214,10 @@ class School_SocialMediaApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return School_SocialMedia.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else School_SocialMedia.objects.all()
+            return School_SocialMedia.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else School_SocialMedia.objects.all()
         return School_SocialMedia.objects.all()
+
 
 class School_DirectorApi(generics.ListAPIView):
     queryset = School_Director.objects.all()
@@ -212,7 +228,8 @@ class School_DirectorApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return School_Director.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else School_Director.objects.all()
+            return School_Director.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else School_Director.objects.all()
         return School_Director.objects.all()
 
 
@@ -225,8 +242,10 @@ class Extra_LessonsApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Extra_Lessons.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Extra_Lessons.objects.all()
+            return Extra_Lessons.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Extra_Lessons.objects.all()
         return Extra_Lessons.objects.all()
+
 
 class RingApi(generics.ListAPIView):
     queryset = Ring.objects.all()
@@ -237,9 +256,9 @@ class RingApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Ring.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Ring.objects.all()
+            return Ring.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Ring.objects.all()
         return Ring.objects.all()
-
 
 
 class TeacherApi(generics.ListAPIView):
@@ -249,11 +268,17 @@ class TeacherApi(generics.ListAPIView):
     permission_classes = [IsClient]
     filter_backends = [DjangoFilterBackend]
     filterset_class = TeacherFilter
+    serializer_class = TeacherReadSerializer
 
     def get_queryset(self):
-        if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Teacher.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Teacher.objects.all()
-        return Teacher.objects.all()
+        queryset = Teacher.objects.all()
+        if self.request.user.is_authenticated:
+            if self.request.user.role == 'client':
+                queryset = queryset.filter(school=self.request.user.school)
+            elif self.request.user.is_superuser:
+                queryset = queryset.select_related('school')
+        return queryset.prefetch_related('jobhistory_set', 'specialityhistory_set')
+
 
 class TeacherWorkloadApi(generics.ListAPIView):
     queryset = TeacherWorkload.objects.all()
@@ -262,24 +287,26 @@ class TeacherWorkloadApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return TeacherWorkload.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else TeacherWorkload.objects.all()
+            return TeacherWorkload.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else TeacherWorkload.objects.all()
         return TeacherWorkload.objects.all()
-
-
 
 
 class KruzhokListApi(generics.ListAPIView):
     model = Kruzhok
     photo_field = 'photo'
     queryset = Kruzhok.objects.all()
+    serializer_class = KruzhokReadSerializer
     permission_classes = [IsClient]
     filter_backends = [DjangoFilterBackend]
     filterset_class = KruzhokFilter
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Kruzhok.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Kruzhok.objects.all()
+            return Kruzhok.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Kruzhok.objects.all()
         return Kruzhok.objects.all()
+
 
 class DopUrokApi(generics.ListAPIView):
     queryset = DopUrok.objects.all()
@@ -290,7 +317,8 @@ class DopUrokApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return DopUrok.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else DopUrok.objects.all()
+            return DopUrok.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else DopUrok.objects.all()
         return DopUrok.objects.all()
 
 
@@ -303,8 +331,10 @@ class DopUrokRingApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return DopUrokRing.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else DopUrokRing.objects.all()
+            return DopUrokRing.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else DopUrokRing.objects.all()
         return DopUrokRing.objects.all()
+
 
 class NewsApi(generics.ListAPIView):
     queryset = News.objects.all()
@@ -315,19 +345,26 @@ class NewsApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return News.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else News.objects.all()
+            return News.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else News.objects.all()
         return News.objects.all()
-    
+
+
 class NotificationsApi(generics.ListAPIView):
-    queryset = Notifications.objects.all()
+    queryset = Notifications.objects.all().order_by('-created_at')
     serializer_class = NotificationsSerializer
     permission_classes = [IsClient]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NotificationsFilter
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return Notifications.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Notifications.objects.all()
-        return Notifications.objects.all()
-    
+            return Notifications.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else Notifications.objects.all().order_by(
+                '-created_at')
+        return Notifications.objects.all().order_by('-created_at')
+
+
 class SchoolMapApi(generics.ListAPIView):
     queryset = SchoolMap.objects.all()
     serializer_class = SchoolMapSerializer
@@ -335,6 +372,7 @@ class SchoolMapApi(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated and self.request.user.role == 'client':
-            return SchoolMap.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else SchoolMap.objects.all()
+            return SchoolMap.objects.filter(
+                school=self.request.user.school) if not self.request.user.is_superuser else SchoolMap.objects.all()
         return SchoolMap.objects.all()
-    
+

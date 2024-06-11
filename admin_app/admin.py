@@ -17,16 +17,15 @@ class SpecialityHistoryInline(admin.TabularInline):
 
 class TeacherAdmin(admin.ModelAdmin):
     inlines = [JobHistoryInline, SpecialityHistoryInline]
+admin.site.register(Teacher,TeacherAdmin)
 
-admin.site.register(Teacher, TeacherAdmin)
-admin.site.register(Class)
 
 from django.contrib.auth.admin import UserAdmin
 
 class UsersAdmin(UserAdmin):
-    list_display = ('email', 'username','role','is_superuser')
-    list_display_links = ('email',)
-    search_fields = ('email', 'name', )
+    list_display = ('username', 'email','role','is_superuser')
+    list_display_links = ('username',)
+    search_fields = ('email', 'username', )
     readonly_fields = ('id', )
     ordering = ('id',)
     filter_horizontal = ()
@@ -35,11 +34,10 @@ class UsersAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2'),
+            'fields': ('username','email', 'password1', 'password2'),
         }),
     )
     list_filter = ('role',)
-
 
 admin.site.register(User, UsersAdmin)
 
@@ -60,16 +58,9 @@ class NewsAdmin(admin.ModelAdmin):
 admin.site.register(News, NewsAdmin)
 
 
-admin.site.register(School)
-admin.site.register(Classrooms)
-admin.site.register(Schedule)
-class RingAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        models.TimeField: {'widget': admin.widgets.AdminTimeWidget},
-    }
+
 admin.site.register(Menu)
 admin.site.register(Slider)
-admin.site.register(Subject)
 admin.site.register(schoolPasport)
 admin.site.register(School_Administration)
 admin.site.register(School_Director)
@@ -91,7 +82,16 @@ admin.site.register(PandikOlimpiada_Success)
 admin.site.register(RedCertificate)
 admin.site.register(AltynBelgi)
 admin.site.register(School_SocialMedia)
-admin.site.register(Ring)
 admin.site.register(DopUrokRing)
 admin.site.register(Notifications)
+
+admin.site.register(School)
+admin.site.register(Subject)
+admin.site.register(ClassGroup)
+admin.site.register(TeacherSubject)
+admin.site.register(Schedule)
+admin.site.register(Ring)
 admin.site.register(SchoolMap)
+admin.site.register(SchoolLessonTime)
+admin.site.register(MainSchoolPhoto)
+admin.site.register(MapCoordinates)
