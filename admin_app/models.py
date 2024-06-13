@@ -435,7 +435,7 @@ class TeacherSubject(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     hours_per_week = models.IntegerField()
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, null=True, blank=True)
     class_group = models.ForeignKey(ClassGroup, on_delete=models.CASCADE, null=True, blank=True)
 
 

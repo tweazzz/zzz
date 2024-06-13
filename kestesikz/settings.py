@@ -243,3 +243,7 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'akimzhankonarbayev@yandex.ru'  # Ваша учетная запись на Яндексе
 EMAIL_HOST_PASSWORD = 'qfvweuxgqayzptfz'
 
+REDIS_URL = "redis://redis:6379/1"
+CELERY_BROKER_URL = 'redis://redis:6379/1'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/1'
+

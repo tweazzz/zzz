@@ -6,6 +6,8 @@ from auth_user.models import User
 
 
 
+admin.site.register(Nationality)
+admin.site.register(Classroom)
 
 class JobHistoryInline(admin.TabularInline):
     model = JobHistory
