@@ -1,19 +1,19 @@
 FROM python:3.10
 
-WORKDIR /code
+WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV DJANGO_SETTINGS_MODULE=kestesikz.settings
 
-COPY requirements.txt /code/
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /code/
+COPY . /app/
 
-COPY entrypoint.sh /code/entrypoint.sh
-RUN chmod +x /code/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8001
 
-ENTRYPOINT ["/code/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
