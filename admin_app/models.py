@@ -24,23 +24,26 @@ class School(models.Model):
     school_eng_name = models.CharField('school_full_name', max_length=255, null=True)
     url = models.CharField('url', max_length=255)
     REGION_CHOICES = [
-        ('abay', 'Абайская область'),
-        ('akmolinsk', 'Акмолинская область'),
-        ('aktobe', 'Актюбинская область'),
-        ('almaty_region', 'Алматинская область'),
-        ('atyrau', 'Атырауская область'),
-        ('east_kazakhstan', 'Восточно-Казахстанская область'),
-        ('zhambyl', 'Жамбылская область'),
-        ('zhetysu', 'Жетысуская область'),
-        ('west_kazakhstan', 'Западно-Казахстанская область'),
-        ('karaganda', 'Карагандинская область'),
-        ('kostanay', 'Костанайская область'),
-        ('kyzylorda', 'Кызылординская область'),
-        ('mangystau', 'Мангистауская область'),
-        ('pavlodar', 'Павлодарская область'),
-        ('north_kazakhstan', 'Северо-Казахстанская область'),
-        ('turkestan', 'Туркестанская область'),
-        ('ulytau', 'Улытауская область'),
+        ('almaty', 'almaty'),
+        ('astana', 'astana'),
+        ('shymkent', 'shymkent'),
+        ('abay_oblast', 'abay_oblast'),
+        ('akmolinsk_oblast', 'akmolinsk_oblast'),
+        ('aktobe_oblast', 'aktobe_oblast'),
+        ('almaty_region', 'almaty_region'),
+        ('atyrau_oblast', 'atyrau_oblast'),
+        ('east_kazakhstan_oblast', 'east_kazakhstan_oblast'),
+        ('zhambyl_oblast', 'zhambyl_oblast'),
+        ('zhetysu_oblast', 'zhetysu_oblast'),
+        ('west_kazakhstan_oblast', 'west_kazakhstan_oblast'),
+        ('karaganda_oblast', 'karaganda_oblast'),
+        ('kostanay_oblast', 'kostanay_oblast'),
+        ('kyzylorda_oblast', 'kyzylorda_oblast'),
+        ('mangystau_oblast', 'mangystau_oblast'),
+        ('pavlodar_oblast', 'pavlodar_oblast'),
+        ('north_kazakhstan_oblast', 'north_kazakhstan_oblast'),
+        ('turkestan_oblast', 'turkestan_oblast'),
+        ('ulytau_oblast', 'ulytau_oblast'),
     ]
     region = models.CharField('region', max_length=255, choices=REGION_CHOICES, null=True)
     CITY_CHOICES = [
@@ -61,6 +64,7 @@ class School(models.Model):
         choices=timezone_choices,
         default=GMT_5,
     )
+    school_map = models.ImageField(blank=True, null=True)
     user = models.OneToOneField('auth_user.User', on_delete=models.CASCADE, blank=True, null=True, related_name='school_user')
     qrcode = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
 
@@ -109,32 +113,23 @@ class Teacher(models.Model):
     full_name = models.CharField(max_length=250)
     photo3x4 = models.ImageField(null=True, blank=True)
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
-    pedagog_sheber = 'Pedagog Sheber'
-    pedagog_zertteushy = 'Pedagog Zertteushy'
-    pedagog_sarapshy = 'Pedagog Sarapshy'
-    pedagog_moderator = 'Pedagog Moderator'
-    pedagog = 'Pedagog'
-    pedagog_stazher = 'Pedagog Stazher'
-    pedagog_zhogary = 'Pedagog Zhogary'
-    pedagog1sanat = 'Pedagog 1 sanat'
-    pedagog2sanat = 'Pedagog 2 sanat'
-    pedagog_sanat_zhok = 'Pedagog sanat zhok'
-    pedagog_choices = [
-        (pedagog_sheber, 'Pedagog Sheber'),
-        (pedagog_zertteushy, 'Pedagog Zertteushy'),
-        (pedagog_sarapshy, 'Pedagog Sarapshy'),
-        (pedagog_moderator, 'Pedagog Moderator'),
-        (pedagog, 'Pedagog'),
-        (pedagog_stazher, 'Pedagog Stazher'),
-        (pedagog_zhogary, 'Pedagog Zhogary'),
-        (pedagog1sanat, 'Pedagog 1 sanat'),
-        (pedagog2sanat, 'Pedagog 2 sanat'),
-        (pedagog_sanat_zhok, 'Pedagog sanat zhok'),
+    PEDAGOG_CHOICES = [
+        ('pedagog_sheber', 'pedagog_sheber'),
+        ('pedagog_zertteushy', 'pedagog_zertteushy'),
+        ('pedagog_sarapshy', 'pedagog_sarapshy'),
+        ('pedagog_moderator', 'pedagog_moderator'),
+        ('pedagog', 'pedagog'),
+        ('pedagog_stazher', 'pedagog_stazher'),
+        ('pedagog_zhogary', 'pedagog_zhogary'),
+        ('pedagog1sanat', 'pedagog1sanat'),
+        ('pedagog2sanat', 'pedagog2sanat'),
+        ('pedagog_sanat_zhok', 'pedagog_sanat_zhok'),
     ]
     pedagog = models.CharField(
-        max_length=20,
-        choices=pedagog_choices,
-        default=pedagog_sheber,
+        max_length=200,
+        choices=PEDAGOG_CHOICES,
+        null=True, blank=True,
+        default='pedagog'
     )
 
     class Meta:
@@ -209,19 +204,19 @@ class DopUrokRing(models.Model):
 
 class Schedule(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
-    Monday = "Monday"
-    Tuesday = "Tuesday"
-    Wednesday = "Wednesday"
-    Thursday = "Thursday"
-    Friday = "Friday"
-    Saturday = "Saturday"
+    Monday = "1"
+    Tuesday = "2"
+    Wednesday = "3"
+    Thursday = "4"
+    Friday = "5"
+    Saturday = "6"
     WEEK_DAY_CHOICES = [
-        (Monday, "Monday"),
-        (Tuesday, "Tuesday"),
-        (Wednesday, "Wednesday"),
-        (Thursday, "Thursday"),
-        (Friday, "Friday"),
-        (Saturday, "Saturday")
+        (Monday, "1"),
+        (Tuesday, "2"),
+        (Wednesday, "3"),
+        (Thursday, "4"),
+        (Friday, "5"),
+        (Saturday, "6")
     ]
     week_day = models.CharField(
         max_length=20,
@@ -287,7 +282,6 @@ class DopUrok(models.Model):
 
 class Menu(models.Model):
     food_name = models.CharField(max_length=250)
-    food_reti = models.CharField(max_length=150, null=True)
     food_sostav = models.TextField()
     vihod_1 = models.CharField(max_length=100, null=True)
     vihod_2 = models.CharField(max_length=100, null=True)
@@ -479,7 +473,6 @@ class schoolPasport(models.Model):
     school_history = models.TextField(null=True,blank=True)
 
     class Meta:
-        unique_together = ('school',)
         verbose_name_plural = 'School Pasport'
 
     def __str__(self):
@@ -549,8 +542,7 @@ def delete_qr_code(sender, instance, **kwargs):
 class School_Administration(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
     administrator_name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=100)
-    administator_photo = models.ImageField()
+    administator_photo = models.ImageField(null=True,blank=True)
     position = models.CharField(max_length=100)
 
     class Meta:
@@ -567,7 +559,6 @@ class Sport_Success(models.Model):
     fullname = models.CharField(max_length=100)
     photo = models.ImageField(null=True,blank=True)
     student_success = models.TextField(null=True,blank=True)
-    class_group = models.ForeignKey('ClassGroup', on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name_plural = f"Pride of the School Sport"
@@ -580,7 +571,6 @@ class Oner_Success(models.Model):
     fullname = models.CharField(max_length=150,null=True,blank=True)
     photo = models.ImageField(null=True,blank=True)
     student_success = models.TextField(null=True,blank=True)
-    classl = models.CharField(max_length=100, null=True,blank=True)
 
     class Meta:
         verbose_name_plural = f"Pride of the School Oner"
@@ -593,7 +583,6 @@ class PandikOlimpiada_Success(models.Model):
     fullname = models.CharField(max_length=150,null=True,blank=True)
     photo = models.ImageField(null=True,blank=True)
     student_success = models.TextField(null=True,blank=True)
-    class_group = models.ForeignKey('ClassGroup', on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name_plural = f"Pride of the School Olimpiada"
@@ -604,9 +593,8 @@ class PandikOlimpiada_Success(models.Model):
 class RedCertificate(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
     fullname = models.CharField(max_length=100)
-    photo = models.ImageField()
+    photo = models.ImageField(null=True)
     student_success = models.CharField(max_length=250)
-    endyear = models.CharField(max_length=10, default="2011-2022")
 
     class Meta:
         verbose_name_plural = "Red Certificate"
@@ -617,9 +605,8 @@ class RedCertificate(models.Model):
 class AltynBelgi(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
     fullname = models.CharField(max_length=100)
-    photo = models.ImageField()
+    photo = models.ImageField(null=True)
     student_success = models.CharField(max_length=250)
-    endyear = models.CharField(max_length=10, default="2011-2022")
 
     class Meta:
         verbose_name_plural = "AltynBelgi"
@@ -642,7 +629,7 @@ class AltynBelgi(models.Model):
 
 class School_Director(models.Model):
     director_name = models.CharField(max_length=100)
-    director_photo = models.ImageField()
+    director_photo = models.ImageField(null=True)
     phone_number = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
@@ -656,7 +643,6 @@ class School_Director(models.Model):
 class Extra_Lessons(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, null=True)
     type_full_name = models.CharField(max_length=200)
-    type_color = ColorField(verbose_name='Выберите цвет')
 
     class Meta:
         verbose_name_plural = "Extra Lessons"
@@ -713,7 +699,7 @@ class Kruzhok(models.Model):
     school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True,blank=True)
     photo = models.ImageField(upload_to='main/static/img',null=True)
-    purpose = models.CharField(max_length=500,null=True,blank=True)
+    purpose = models.CharField(max_length=3000,null=True,blank=True)
     Monday = "1"
     Tuesday = "2"
     Wednesday = "3"

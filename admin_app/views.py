@@ -13,6 +13,12 @@ from .filters import *
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser,JSONParser
+from rest_framework.pagination import PageNumberPagination
+
+class SchedulePagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class PhotoUploadMixin(viewsets.ModelViewSet):
@@ -115,12 +121,6 @@ class ClassApi(viewsets.ModelViewSet):
                             status=status.HTTP_401_UNAUTHORIZED)
 
 
-from rest_framework.pagination import PageNumberPagination
-
-class SchedulePagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 
 
 from django.db.models import Prefetch
@@ -128,7 +128,7 @@ from django.db.models import Prefetch
 
 class ScheduleApi(viewsets.ModelViewSet):
     queryset = Schedule.objects.all().select_related('school', 'teacher', 'ring',
-                                                     'classl', 'subject', 'classroom', 'teacher2',
+                                                     'class_group', 'subject', 'classroom', 'teacher2',
                                                      'classroom2', 'subject2', 'typez')
 
     serializer_class = ScheduleSerializer
@@ -144,11 +144,12 @@ class ScheduleApi(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Schedule.objects.filter(
+            return Schedule.objects.select_related('school', 'teacher', 'ring', 'class_group', 'subject', 'classroom',
+                                                   'teacher2', 'classroom2', 'subject2', 'typez').filter(
                 school=self.request.user.school) if not self.request.user.is_superuser else Schedule.objects.all().select_related(
-                'school', 'teacher', 'ring', 'classl', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2',
+                'school', 'teacher', 'ring', 'class_group', 'subject', 'classroom', 'teacher2', 'classroom2', 'subject2',
                 'typez')
-        return Schedule.objects.all().select_related('school', 'teacher', 'ring', 'classl', 'subject', 'classroom',
+        return Schedule.objects.all().select_related('school', 'teacher', 'ring', 'class_group', 'subject', 'classroom',
                                                      'teacher2', 'classroom2', 'subject2', 'typez')
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
@@ -163,7 +164,7 @@ class ScheduleApi(viewsets.ModelViewSet):
                 return Response({'error': 'You do not have permission to delete schedules for this school.'},
                                 status=status.HTTP_403_FORBIDDEN)
             # Удаляем все записи расписания для указанного класса
-            deleted_count, _ = Schedule.objects.filter(school=request.user.school, classl=class_obj).delete()
+            deleted_count, _ = Schedule.objects.filter(school=request.user.school, class_group=class_obj).delete()
             return Response({'message': f'Successfully deleted {deleted_count} schedules for class {class_id}.'},
                             status=status.HTTP_200_OK)
         else:
@@ -495,9 +496,27 @@ class TeacherApi(PhotoUploadMixin, viewsets.ModelViewSet):
         serializer.save()
 
     def get_queryset(self):
+        queryset = Teacher.objects.all()
         if self.request.user.is_authenticated:
-            return Teacher.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else Teacher.objects.select_related('school')
-        return Teacher.objects.select_related('school')
+            queryset = queryset.filter(school=self.request.user.school) if not self.request.user.is_superuser else queryset
+
+        queryset = queryset.select_related('school').prefetch_related('jobhistory_set', 'specialityhistory_set')
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def available_teachers(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                teachers = Teacher.objects.all()
+            else:
+                teachers = Teacher.objects.filter(school=request.user.school)
+
+            serializer = AvailableTeacherSerializer(teachers, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Authentication credentials were not provided."},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
 
 class TeacherWorkloadApi(viewsets.ModelViewSet):
     queryset = TeacherWorkload.objects.all()
@@ -620,8 +639,8 @@ class NewsApi(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return News.objects.filter(school=self.request.user.school) if not self.request.user.is_superuser else News.objects.all().select_related('school')
-        return News.objects.all().select_related('school')
+            return News.objects.filter(school=self.request.user.school).order_by('-date') if not self.request.user.is_superuser else News.objects.all().select_related('school').order_by('-date')
+        return News.objects.all().select_related('school').order_by('-date')
     
 class NotificationsApi(viewsets.ModelViewSet):
     queryset = Notifications.objects.all().select_related('school').order_by('-created_at')
@@ -643,6 +662,8 @@ class SchoolMapApi(viewsets.ModelViewSet):
     queryset = SchoolMap.objects.all().select_related('school')
     serializer_class = SchoolMapSerializer
     permission_classes = [IsAdminSchool]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = SchoolMapFilter
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:

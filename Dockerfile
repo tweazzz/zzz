@@ -14,6 +14,6 @@ COPY . /code/
 COPY entrypoint.sh /code/entrypoint.sh
 RUN chmod +x /code/entrypoint.sh
 
-EXPOSE 8000
+EXPOSE 8001
 
 ENTRYPOINT ["/code/entrypoint.sh"]
