@@ -26,8 +26,10 @@ SECRET_KEY = 'django-insecure-&b0+q0f*+4z+ruo)u#%yy$!-o2h+qq7zq-vmzd!157s)2p&ye(
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['*']
-CORS_ALLOWED_ORIGINS = []
+SESSION_COOKIE_SECURE = True
+MY_DOMAIN = 'bilimge.kz'
+SESSION_COOKIE_DOMAIN = MY_DOMAIN
+ALLOWED_HOSTS = [MY_DOMAIN, 'www.' + MY_DOMAIN,'185.100.67.208', '127.0.0.1']
 
 
 # Application definition
@@ -56,31 +58,44 @@ INSTALLED_APPS = [
     'fcm_django'
 ]
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'console': {
-#             'level': 'DEBUG',
-#             'class': 'logging.StreamHandler',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['console'],
-#             'level': 'DEBUG',
-#         },
-#         '': {
-#             'handlers': ['console'],
-#             'level': 'DEBUG',
-#         },
-#     },
-# }
+FCM_DJANGO_SETTINGS = {
+    "FCM_SERVER_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCeDFKj9jC+KHzR\npTD7CBWT21GMt5M0PBajJ1JmvJC1d+wyAy797iBsOHdutTAciKgBv4bWy+13pomn\nC1yTotEBnM6iLT5Y+gOPEjkYn8U1CxKiFCwBhm7CK/1OfMnTUFG6Fy7bl7Epj03X\n+jyHmt3+PqSCo9wVseD1s1++ra/6u6SzFD7MhYQ6Q/ccsH15cWHV48l5M5S59fNO\nh0oLgmP40aALJMcDdw015S5QiMQ+nGgO4uGDnVZyTQRcgJBnmH76DfxfEV2bkHZu\nLaNS1y9pKlkoWa+vzs8ESAaX6mMmx4qwE4nCVR3eLUHQZ7LBSKvasm0w+WCz99e1\nLeL9gwzvAgMBAAECggEALpVaPEqBhmLfm1kxrSPuXDSt/ihTgnddgrxBzNcyXdJZ\nc0o97QllVBB2n1JXOmnK/yzo/OGBfh0/gFVYdYltSijiPKnSMR6Lsv0/h/L7iM1Z\nMh149QAfICsgD6S3Rgnr9MoFfSLiTGoZGxn+AkgSu2/SRFEwutJBiJnUlBqUfnWe\nnBTSGZKbhbzvNbt5SzJVnBtSmFiU0E365E2b2tU+TPpMZOG9l4sTR5xD/nyV0m2x\n5tu3QpA+5SVoVwh0oeZlgjAaKvQoPzjJz+4h9n9ZbKyv6UwOTZMMt9ZV+zQGXsnB\nwcAOTZh/LAzmdjMuInlA1rO/yxSl0n6gVmMgNyDCOQKBgQDJU2GTtsi9XrX/cK34\n2i545Il/sROs449hSODJ+1PPvg14KhfGuq2+mkHc8OfcX6e9mrp2uNn4ECUFtmuT\neOuWHcM+WYwsWYcua0FppFJWttk14evgcmjGtZez8kkuJZQ4xB3zX1jTM1zfNnYk\nZ3U0Hapi3xOZLpH435raaHSElwKBgQDI+C/aXAc0M/BYNekgB7uANKv5/YSvcPPK\neBiQ5t1bU0GdwTqO8QzA5g8itps8bKLFjHLsakZ0L5ejMqHD09Foy+PXhqwbYQVn\nhHAInG5iQUE7r+wwIwb3I8S6ZZ43sN3Af1ItojKtl9CjBb9gRmsrdIe4D7GC2xeM\nRLa8S4sNaQKBgHXgYC2AxCA8qAscCoC+Hp+iD++32nFL+9NWPGeGxBfKi1BkNO+i\ntb/3ycB3PQqG50vYoHyK1vSrX0HtASejkSyf2IVVIQGGmePP4Mjd8WfcP2mREe6k\njjxqbpxpq/ddAWALVA3/MZ7XX/VBigLeoH0XMYAaZPs3jThOk/h1WGOZAoGAJcXw\nSJyPhhJVFF9dp/WMGnbL9DrgW5FhYSbdhy69YFLvvFT7Sq6n9QHIyn+EAgFxPqw9\nVY5MG75uQ/BaU1JWw9m+w12+r46201QjMpskbDdTqYJRZGLRBlakvVwoNtN5eprz\nuTwJRnOIdXu5EsFpl0tZzxC0DqJbdLPdnNqeEjECgYBrZ2w2/WDoHJIG79MikJF0\nl1uJ55izwwcqxcQKvZcsxLB8ZWJpvbysAWd45bo06kl53xdhC5L48TTTH4M1UgYE\nGAgScY2fnV40oMmrjA5JKyvJY+lxRqr7mKAnuAM1kOitANGfFmw8DpPkGbYNokUt\nekaSfT90GtMprCTX5peqiw==\n-----END PRIVATE KEY-----\n"
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(asctime)s %(message)s'
+        },
+    },
+    'handlers': {
+        'db_log': {
+            'level': 'DEBUG',
+            'class': 'django_db_logger.db_log_handler.DatabaseLogHandler'
+        },
+    },
+    'loggers': {
+        'db': {
+            'handlers': ['db_log'],
+            'level': 'DEBUG'
+        },
+        'django.request': { # logging 500 errors to database
+            'handlers': ['db_log'],
+            'level': 'ERROR',
+            'propagate': False,
+        }
+    }
+}
 
 
 # AUTH
 AUTH_USER_MODEL = 'auth_user.User'
-AUTHENTICATION_BACKENDS = ['auth_user.backends.EmailOrUsernameModelBackend', 'django.contrib.auth.backends.ModelBackend']
+AUTHENTICATION_BACKENDS = ['auth_user.backends.EmailOrUsernameModelBackend']
 
 
 REST_FRAMEWORK = {
@@ -170,10 +185,21 @@ WSGI_APPLICATION = 'kestesikz.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'kestesikz',
+	'USER': 'kestesikz',
+	'PASSWORD': 'kestesikz',
+	'HOST': 'localhost',
+	'PORT': '5432',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -187,18 +213,18 @@ SPECTACULAR_SETTINGS = {
 
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    # },
 ]
 
 
@@ -221,13 +247,15 @@ STATIC_URL = 'static/'
 
 INTERNAL_IPS = [
     # ...
-    "127.0.0.1",
+    "185.100.67.208",
+    "www.bilimge.kz"
     # ...
 ]
-STATIC_ROOT = '/kestesikz/static'
+STATIC_URL = 'static/'
+STATIC_ROOT = '/var/www/kestesikz/static'
 import os
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = '/var/www/zzz/media/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

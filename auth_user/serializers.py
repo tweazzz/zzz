@@ -10,7 +10,6 @@ from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerialize
 from admin_app.models import School
 from .models import PasswordResetToken
 
-
 class CustomUserSerializer(serializers.ModelSerializer):
     school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
@@ -19,7 +18,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'school', 'school_url', 'role', 'password')
+        fields = ('id', 'email', 'username', 'school', 'school_url' , 'role','password')
         extra_kwargs = {
             'school': {'read_only': True},
             'role': {'read_only': True},
@@ -59,10 +58,11 @@ class UserMeSerializer(serializers.ModelSerializer):
     school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all(), required=False)
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
     school_name = serializers.SerializerMethodField()
+    school_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'school', 'school_name', 'role', 'is_superuser')
+        fields = ('id', 'email', 'username', 'school', 'school_name','school_url', 'role', 'is_superuser')
         extra_kwargs = {
             'school': {'read_only': True},
             'role': {'read_only': True},
@@ -71,9 +71,13 @@ class UserMeSerializer(serializers.ModelSerializer):
     def get_school_name(self, obj):
         return obj.school.school_kz_name if obj.school else None
 
+    def get_school_url(self,obj):
+        return obj.school.url if obj.school else None
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['school_name'] = self.get_school_name(instance)
+        representation['school_url'] = self.get_school_url(instance)
         return representation
 
 
@@ -97,12 +101,10 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         user.save()
         return user
 
-
 from djoser.serializers import TokenCreateSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-
 
 class TokenSerializer(serializers.ModelSerializer):
     auth_token = serializers.CharField(source='key')
@@ -110,7 +112,6 @@ class TokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Token
         fields = ('auth_token',)
-
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):
     def create(self, validated_data):
@@ -154,9 +155,8 @@ class PasswordResetVerifySerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+
 from fcm_django.models import FCMDevice
-
-
 class FCMDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = FCMDevice

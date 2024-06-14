@@ -44,7 +44,7 @@ class ClientUserViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         mutable_data = request.data.copy()
-        mutable_data['role'] = 'client'
+        mutable_data['role'] = 'student'
         serializer = self.get_serializer(data=mutable_data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -103,9 +103,7 @@ class UserMeView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        user = self.request.user
-        print(f"User object: {user}")
-        return user
+        return self.request.user
 
     def retrieve(self, request, *args, **kwargs):
         serializer = self.get_serializer(request.user)
@@ -126,7 +124,6 @@ from django.utils import timezone
 def send_reset_code(request):
     if request.method == 'POST':
         email = request.data.get('email')
-
         try:
             # Поиск пользователя по phone_number
             user = User.objects.get(email=email)
