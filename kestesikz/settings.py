@@ -185,12 +185,12 @@ WSGI_APPLICATION = 'kestesikz.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'kestesikz',
-	'USER': 'kestesikz',
-	'PASSWORD': 'kestesikz',
-	'HOST': 'localhost',
-	'PORT': '5432',
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': 'railway',
+	'USER': 'postgres',
+	'PASSWORD': 'kNPZVPHWBmCoQLchBnfEqTEkoqGypoIh',
+	'HOST': 'roundhouse.proxy.rlwy.net',
+	'PORT': '16625',
     }
 }
 

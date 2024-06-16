@@ -16,8 +16,4 @@ class Migration(migrations.Migration):
             name='school',
             field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, to='admin_app.school'),
         ),
-        migrations.AlterUniqueTogether(
-            name='schoolpasport',
-            unique_together={('school',)},
-        ),
     ]
